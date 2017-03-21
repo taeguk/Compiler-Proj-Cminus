@@ -1,9 +1,10 @@
 /****************************************************/
 /* File: globals.h                                  */
-/* Global types and vars for TINY compiler          */
+/* Global types and vars for C- compiler            */
 /* must come before other include files             */
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
+/* Modified by Kwanghee Choi                        */
 /****************************************************/
 
 #ifndef _GLOBALS_H_
@@ -30,11 +31,18 @@ typedef enum
    {
     ENDFILE,ERROR,
     /* reserved words */
-    IF,THEN,ELSE,END,REPEAT,UNTIL,READ,WRITE,
+    ELSE,IF,INT,RETURN,VOID,WHILE,
     /* multicharacter tokens */
     ID,NUM,
     /* special symbols */
-    ASSIGN,EQ,LT,PLUS,MINUS,TIMES,OVER,LPAREN,RPAREN,SEMI
+    /* + - * / */
+    PLUS,MINUS,TIMES,OVER,
+    /* < <= > >= == != */
+    LT,LE,GT,GE,EQ,NE,
+    /* = ; , */
+    ASSIGN,SEMI,COMMA,
+    /* ( ) [ ] { } */
+    LPAREN,RPAREN,LBRACK,RBRACK,LBRACE,RBRACE,
    } TokenType;
 
 extern FILE* source; /* source code text file */

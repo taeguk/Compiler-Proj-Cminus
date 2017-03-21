@@ -1,8 +1,9 @@
 /****************************************************/
 /* File: tiny.l                                     */
-/* Lex specification for TINY                       */
+/* Lex specification for C-                         */
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
+/* Modified by Kwanghee Choi                        */
 /****************************************************/
 
 %{
@@ -22,39 +23,40 @@ whitespace  [ \t]+
 
 %%
 
-"if"            {return IF;}
-"then"          {return THEN;}
 "else"          {return ELSE;}
-"end"           {return END;}
-"repeat"        {return REPEAT;}
-"until"         {return UNTIL;}
-"read"          {return READ;}
-"write"         {return WRITE;}
-":="            {return ASSIGN;}
-"="             {return EQ;}
-"<"             {return LT;}
+"if"            {return IF;}
+"int"           {return INT;}
+"return"        {return RETURN;}
+"void"          {return VOID;}
+"while"         {return WHILE;}
+
 "+"             {return PLUS;}
 "-"             {return MINUS;}
 "*"             {return TIMES;}
 "/"             {return OVER;}
+
+"<"             {return LT;}
+"<="            {return LE;}
+">"             {return GT;}
+">="            {return GE;}
+"=="            {return EQ;}
+"!="            {return NE;}
+
+"="             {return ASSIGN;}
+";"             {return SEMI;}
+","             {return COMMA;}
+
 "("             {return LPAREN;}
 ")"             {return RPAREN;}
-";"             {return SEMI;}
+"["             {return LBRACK;}
+"]"             {return RBRACK;}
+"{"             {return LBRACE;}
+"}"             {return RBRACE;}
+
 {number}        {return NUM;}
 {identifier}    {return ID;}
 {newline}       {lineno++;}
 {whitespace}    {/* skip whitespace */}
-"{"             {
-                  char c;
-                  do
-                  {
-                    c = input();
-                    if (c == EOF) break;
-                    if (c == '\n') lineno++;
-                  }
-                  while (c != '}');
-                }
-.               {return ERROR;}
 
 %%
 
