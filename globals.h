@@ -27,8 +27,8 @@
 #define MAXRESERVED 8
 
 typedef enum 
-    /* book-keeping tokens */
    {
+    /* book-keeping tokens */
     ENDFILE,ERROR,
     /* reserved words */
     ELSE,IF,INT,RETURN,VOID,WHILE,
