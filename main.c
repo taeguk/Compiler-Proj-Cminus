@@ -38,7 +38,7 @@ FILE * code;
 
 /* allocate and set tracing flags */
 int EchoSource = FALSE;
-int TraceScan = FALSE;
+int TraceScan = TRUE;
 int TraceParse = FALSE;
 int TraceAnalyze = FALSE;
 int TraceCode = FALSE;
@@ -67,8 +67,14 @@ main(int argc, char* argv[])
     exit(1);
   }
   listing = stdout; /* send listing to screen */
-  fprintf(listing,"\nTINY COMPILATION: %s\n",pgm);
 #if NO_PARSE
+  if (TraceScan)
+    {
+      int divider_cnt = 80;
+      fprintf(listing,"\n\tline number\t\ttoken\t\t\tlexeme\n");
+      while(divider_cnt--) putchar('-');
+      putchar('\n');
+    }
   while (getToken()!=ENDFILE);
 #else
   syntaxTree = parse();

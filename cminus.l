@@ -63,7 +63,6 @@ whitespace  [ \t]+
 TokenType
 getToken(void)
 {
-  puts("getToken");
   static int firstTime = TRUE;
   TokenType currentToken;
   if (firstTime)
@@ -77,7 +76,7 @@ getToken(void)
   strncpy(tokenString,yytext,MAXTOKENLEN);
   if (TraceScan)
     {
-      fprintf(listing,"\t%d: ",lineno);
+      fprintf(listing,"\t%d\t\t\t",lineno);
       printToken(currentToken,tokenString);
     }
   return currentToken;
