@@ -4,6 +4,7 @@
 /* for the TINY compiler                            */
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
+/* Modified by Kwanghee Choi                        */
 /****************************************************/
 
 #include "globals.h"
@@ -17,40 +18,50 @@ printToken(TokenType token, const char* tokenString)
 {
   switch (token)
     {
-    case IF:
-    case THEN:
-    case ELSE:
-    case END:
-    case REPEAT:
-    case UNTIL:
-    case READ:
-    case WRITE:
-      fprintf(listing,
-         "reserved word: %s\n",tokenString);
-      break;
-    case ASSIGN: fprintf(listing,":=\n"); break;
-    case LT: fprintf(listing,"<\n"); break;
-    case EQ: fprintf(listing,"=\n"); break;
-    case LPAREN: fprintf(listing,"(\n"); break;
-    case RPAREN: fprintf(listing,")\n"); break;
-    case SEMI: fprintf(listing,";\n"); break;
+    case ENDFILE: fprintf(listing,"EOF\n"); break;
+    case ERROR: fprintf(listing,
+                        "ERROR: %s\n",tokenString); break;
+
+    case ELSE: fprintf(listing,
+                       "reserved word: else\n"); break;
+    case IF: fprintf(listing,
+                     "reserved word: if\n"); break;
+    case INT: fprintf(listing,
+                      "reserved word: int\n"); break;
+    case RETURN: fprintf(listing,
+                         "reserved word: return\n"); break;
+    case VOID: fprintf(listing,
+                       "reserved word: void\n"); break;
+    case WHILE: fprintf(listing,
+                        "reserved word: while\n"); break;
+
     case PLUS: fprintf(listing,"+\n"); break;
     case MINUS: fprintf(listing,"-\n"); break;
     case TIMES: fprintf(listing,"*\n"); break;
     case OVER: fprintf(listing,"/\n"); break;
-    case ENDFILE: fprintf(listing,"EOF\n"); break;
-    case NUM:
-      fprintf(listing,
-          "NUM, val= %s\n",tokenString);
-      break;
-    case ID:
-      fprintf(listing,
-          "ID, name= %s\n",tokenString);
-      break;
-    case ERROR:
-      fprintf(listing,
-          "ERROR: %s\n",tokenString);
-      break;
+
+    case LT: fprintf(listing,"<\n"); break;
+    case LE: fprintf(listing,"<=\n"); break;
+    case GT: fprintf(listing,">\n"); break;
+    case GE: fprintf(listing,">=\n"); break;
+    case EQ: fprintf(listing,"==\n"); break;
+    case NE: fprintf(listing,"!=\n"); break;
+
+    case ASSIGN: fprintf(listing,"=\n"); break;
+    case SEMI: fprintf(listing,";\n"); break;
+    case COMMA: fprintf(listing,",\n"); break;
+
+    case LPAREN: fprintf(listing,"(\n"); break;
+    case RPAREN: fprintf(listing,")\n"); break;
+    case LBRACK: fprintf(listing,"[\n"); break;
+    case RBRACK: fprintf(listing,"]\n"); break;
+    case LBRACE: fprintf(listing,"{\n"); break;
+    case RBRACE: fprintf(listing,"}\n"); break;
+
+    case NUM: fprintf(listing,
+                      "NUM, val= %s\n",tokenString); break;
+    case ID: fprintf(listing,
+                     "ID, name= %s\n",tokenString); break;
     default: /* should never happen */
       fprintf(listing,"Unknown token: %d\n",token);
   }
