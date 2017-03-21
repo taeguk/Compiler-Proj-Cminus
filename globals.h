@@ -27,7 +27,8 @@
 
 typedef enum 
     /* book-keeping tokens */
-   {ENDFILE,ERROR,
+   {
+    ENDFILE,ERROR,
     /* reserved words */
     IF,THEN,ELSE,END,REPEAT,UNTIL,READ,WRITE,
     /* multicharacter tokens */
@@ -56,14 +57,16 @@ typedef enum {Void,Integer,Boolean} ExpType;
 #define MAXCHILDREN 3
 
 typedef struct treeNode
-   { struct treeNode * child[MAXCHILDREN];
-     struct treeNode * sibling;
+   {
+     struct treeNode* child[MAXCHILDREN];
+     struct treeNode* sibling;
      int lineno;
      NodeKind nodekind;
      union { StmtKind stmt; ExpKind exp;} kind;
-     union { TokenType op;
+     union {
+             TokenType op;
              int val;
-             char * name; } attr;
+             char* name; } attr;
      ExpType type; /* for type checking of exps */
    } TreeNode;
 
