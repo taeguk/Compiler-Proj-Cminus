@@ -30,10 +30,10 @@ typedef enum
    {
     /* book-keeping tokens */
     ENDFILE,ERROR,
-    /* reserved words */
-    ELSE,IF,INT,RETURN,VOID,WHILE,
     /* multicharacter tokens */
     ID,NUM,
+    /* reserved words */
+    ELSE,IF,INT,RETURN,VOID,WHILE,
     /* special symbols */
     /* + - * / */
     PLUS,MINUS,TIMES,OVER,

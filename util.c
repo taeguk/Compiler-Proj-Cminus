@@ -22,18 +22,17 @@ printToken(TokenType token, const char* tokenString)
     case ERROR: fprintf(listing,
                         "ERROR\t\t\t%s\n",tokenString); break;
 
-    case ELSE: fprintf(listing,
-                       "ELSE\t\t\telse\n"); break;
-    case IF: fprintf(listing,
-                     "IF\t\t\tif\n"); break;
-    case INT: fprintf(listing,
-                      "INT\t\t\tint\n"); break;
-    case RETURN: fprintf(listing,
-                         "RETURN\t\t\treturn\n"); break;
-    case VOID: fprintf(listing,
-                       "VOID\t\t\tvoid\n"); break;
-    case WHILE: fprintf(listing,
-                        "WHILE\t\t\twhile\n"); break;
+    case ID: fprintf(listing,
+                     "ID\t\t\t%s\n",tokenString); break;
+    case NUM: fprintf(listing,
+                      "NUM\t\t\t%s\n",tokenString); break;
+
+    case ELSE: fprintf(listing,"ELSE\t\t\telse\n"); break;
+    case IF: fprintf(listing,"IF\t\t\tif\n"); break;
+    case INT: fprintf(listing,"INT\t\t\tint\n"); break;
+    case RETURN: fprintf(listing,"RETURN\t\t\treturn\n"); break;
+    case VOID: fprintf(listing,"VOID\t\t\tvoid\n"); break;
+    case WHILE: fprintf(listing,"WHILE\t\t\twhile\n"); break;
 
     case PLUS: fprintf(listing,"+\t\t\t+\n"); break;
     case MINUS: fprintf(listing,"-\t\t\t-\n"); break;
@@ -58,10 +57,6 @@ printToken(TokenType token, const char* tokenString)
     case LBRACE: fprintf(listing,"{\t\t\t{\n"); break;
     case RBRACE: fprintf(listing,"}\t\t\t}\n"); break;
 
-    case NUM: fprintf(listing,
-                      "NUM\t\t\t%s\n",tokenString); break;
-    case ID: fprintf(listing,
-                     "ID\t\t\t%s\n",tokenString); break;
     default: /* should never happen */
       fprintf(listing,"[DEBUG] UNKNOWN TOKEN %d\n",token);
   }
