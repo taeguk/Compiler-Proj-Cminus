@@ -14,6 +14,8 @@
 char tokenString[MAXTOKENLEN+1];
 %}
 
+%x COMMENT
+
 digit       [0-9]
 number      {digit}+
 letter      [a-zA-Z]
@@ -22,6 +24,15 @@ newline     \n
 whitespace  [ \t]+
 
 %%
+
+"/*"            {BEGIN(COMMENT);}
+<COMMENT>"*/"   {BEGIN(INITIAL);}
+<COMMENT>.      {/* skip comments */}
+<COMMENT>\n     {/* skip comments */}
+<COMMENT>"/*"   {return ERROR;}
+<COMMENT><<EOF>> {BEGIN(INITIAL); return ERROR;}
+"*/"            {return ERROR;}
+<<EOF>>         {return ENDFILE;}
 
 "else"          {return ELSE;}
 "if"            {return IF;}
