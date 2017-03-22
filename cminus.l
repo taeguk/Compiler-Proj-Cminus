@@ -28,7 +28,7 @@ whitespace  [ \t]+
 "/*"              { BEGIN(COMMENT); }
 <COMMENT>"*/"     { BEGIN(INITIAL); }
 <COMMENT>.        { /* skip comments */ }
-<COMMENT>\n       { /* skip comments */ }
+<COMMENT>{newline} { lineno++; }
 <COMMENT>"/*"     { return ERROR; }
 <COMMENT><<EOF>>  { BEGIN(INITIAL); return ERROR; }
 "*/"              { return ERROR; }
