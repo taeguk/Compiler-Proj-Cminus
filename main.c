@@ -8,9 +8,9 @@
 #include "globals.h"
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
-#define NO_PARSE FALSE
+#define NO_PARSE YES
 /* set NO_ANALYZE to TRUE to get a parser-only compiler */
-#define NO_ANALYZE FALSE
+#define NO_ANALYZE YES
 
 /* set NO_CODE to TRUE to get a compiler that does not
  * generate code
@@ -18,6 +18,7 @@
 #define NO_CODE FALSE
 
 #include "util.h"
+
 
 #if NO_PARSE
 #include "scan.h"
@@ -100,13 +101,13 @@ int main( int argc, char * argv[] )
       strcat(codefile,".tm");
       code = fopen(codefile,"w");
       if (code == NULL)
-      { printf("Unable to open %s\n",codefile);
-        exit(1);
-      }
+        {
+          printf("Unable to open %s\n",codefile);
+          exit(1);
+        }
       codeGen(syntaxTree,codefile);
       fclose(code);
     }
-
 #endif
 #endif
 #endif
