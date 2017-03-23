@@ -5,6 +5,7 @@
 /* Kenneth C. Louden                                */
 /****************************************************/
 
+%option noyywrap
 %{
 #include "globals.h"
 #include "util.h"
