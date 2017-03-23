@@ -8,9 +8,9 @@
 #include "globals.h"
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
-#define NO_PARSE YES
+#define NO_PARSE TRUE
 /* set NO_ANALYZE to TRUE to get a parser-only compiler */
-#define NO_ANALYZE YES
+#define NO_ANALYZE TRUE
 
 /* set NO_CODE to TRUE to get a compiler that does not
  * generate code
@@ -22,6 +22,7 @@
 
 #if NO_PARSE
 #include "scan.h"
+#include "lex.yy.h"
 #else
 #include "parse.h"
 #if !NO_ANALYZE
@@ -63,7 +64,7 @@ int main( int argc, char * argv[] )
      strcat(pgm,".tny");
 */
   source = fopen(pgm,"r");
-  if (source==NULL)
+  if (source == NULL)
     {
       fprintf(stderr,"File %s not found\n",pgm);
       exit(1);
