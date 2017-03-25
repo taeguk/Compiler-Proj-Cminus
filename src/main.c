@@ -21,8 +21,8 @@
 
 
 #if NO_PARSE
-#include "scan.h"
-#include "lex.yy.h"
+// #include "scan.h"
+#include "lex.h"
 #else
 #include "parse.h"
 #if !NO_ANALYZE
@@ -41,7 +41,7 @@ FILE * code;
 
 /* allocate and set tracing flags */
 int EchoSource = FALSE;
-int TraceScan = FALSE;
+int TraceScan = TRUE;
 int TraceParse = FALSE;
 int TraceAnalyze = FALSE;
 int TraceCode = FALSE;
@@ -71,8 +71,9 @@ int main( int argc, char * argv[] )
     }
 
   listing = stdout; /* send listing to screen */
-  fprintf(listing,"\nTINY COMPILATION: %s\n",pgm);
-
+//  fprintf(listing,"\nTINY COMPILATION: %s\n",pgm);
+  fprintf(listing, "    line number\t\ttoken\t\tlexeme\n");
+  fprintf(listing, "-----------------------------------------------\n");
 
 #if NO_PARSE
   while (getToken()!=ENDFILE);
