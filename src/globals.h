@@ -26,14 +26,13 @@
 #define MAXRESERVED 8
 
 typedef enum 
-    /* book-keeping tokens */
-   {ENDFILE,ERROR,
-    /* reserved words */
-    IF,THEN,ELSE,END,REPEAT,UNTIL,READ,WRITE,
-    /* multicharacter tokens */
-    ID,NUM,
-    /* special symbols */
-    ASSIGN,EQ,LT,PLUS,MINUS,TIMES,OVER,LPAREN,RPAREN,SEMI
+   {
+      /* book-keeping tokens */
+      ENDFILE,ERROR,
+      /* multicharacter tokens */
+      KEYWORD, OPERATOR, ID, NUM,
+      /* special symbols */
+      SYMBOL, PAREN
    } TokenType;
 
 extern FILE* source; /* source code text file */
