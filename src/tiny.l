@@ -43,7 +43,7 @@ arithmetic  "+"|"-"|"*"|"/"|"%"
 bitwise     "&"|"|"|"^"|"~"
 assignment  "="
 operator    {bitwise}|{logical}|{arithmetic}|{assignment}
-symbol      ";"|","|"?"|":"
+symbol      ";"|","|"?"|":"|"."|\"|\'|\#|\\
 
 paren       "("|")"|"["|"]"|"{"|"}"
 %%
