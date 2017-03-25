@@ -1,7 +1,6 @@
 SRC_DIR = .
 TARGET = util
 LEX_TARGET= tiny.l
-MAIN_PROG = main
 
 build: build.lex build.core
 	gcc -c $(MAIN_PROG).c -o $(OBJS_DIR)/$(MAIN_PROG).o
