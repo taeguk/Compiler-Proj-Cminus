@@ -8,8 +8,6 @@ Modify [Tiny Compiler](http://www.cs.sjsu.edu/faculty/louden/cmptext/) and devel
 * flex (fast lex)
 
 ## Project 1: Design and Implementation of Lexical Analyzer - Build Scanner
-### Lexical conventions of C-
-
 ### Usage
 ```
 $ make
@@ -21,6 +19,7 @@ $ bash lexeme_error_check.bash
 ```
 If nothing appears after this test, there is no error in the file.
 
+### Lexical conventions of C-
 #### Keywords
  - else
  - if
