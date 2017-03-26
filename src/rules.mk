@@ -1,6 +1,6 @@
 BUILD_DIR = $(SRC_DIR)/build
 OBJS_DIR = $(BUILD_DIR)/objs
-MAIN_PROG = main
+MAIN_PROG = 20141570
 
 .PHONY: clean
 clean:
