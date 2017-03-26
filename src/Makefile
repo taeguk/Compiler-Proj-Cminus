@@ -3,7 +3,7 @@ TARGET = util
 LEX_TARGET= tiny.l
 
 build: build.lex build.core
-	gcc -c $(MAIN_PROG).c -o $(OBJS_DIR)/$(MAIN_PROG).o
+	gcc -c main.c -o $(OBJS_DIR)/main.o
 	gcc -o $(SRC_DIR)/../$(MAIN_PROG) $(OBJS_DIR)/*.o
 
 build.lex: tiny.l .mkdir.o
