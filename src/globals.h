@@ -30,7 +30,7 @@ typedef enum
       /* book-keeping tokens */
       ENDFILE,ERROR,
       /* multicharacter tokens */
-      KEYWORD, OPERATOR, ID, NUM,
+      KEYWORD, ID, NUM,
       /* special symbols */
       SYMBOL, PAREN
    } TokenType;

@@ -22,11 +22,10 @@ void printToken( TokenType token, const char* token_string )
           int diff = 'A' - 'a';
           for (i = 0; token_string[i]; ++i)
             fprintf(listing, "%c",token_string[i]+diff);
-          if (strlen(token_string) > 5)
+          if (strlen(token_string) < 6)
             fprintf(listing, "\t");
           fprintf(listing, "\t%s\n", token_string);
         } break;
-    case OPERATOR:
     case PAREN:
     case SYMBOL:
       fprintf(listing,
