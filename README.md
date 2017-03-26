@@ -1,10 +1,9 @@
 # Compielr for C- language
-## Design and Development of Compiler for C-(C minus) Language
-
-### Description
+## Description
+Design and Development of Compiler for C-(C minus) Language  
 Modify [Tiny Compiler](http://www.cs.sjsu.edu/faculty/louden/cmptext/) and develop a compiler for C-Minus(a subset of C).
 
-### Required Program
+## Required Program
 * gcc
 * flex (fast lex)
 
@@ -41,5 +40,5 @@ If nothing appears after this test, there is no error in the file.
  - ID = letter+
  - NUM = digit+
 
-### Author
+## Author
  * Taeseung Lee
