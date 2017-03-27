@@ -7,4 +7,4 @@
 
    ment*/
 
-/* comerrorb * 
+/* comerrorb /* 

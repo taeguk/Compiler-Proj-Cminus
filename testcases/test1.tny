@@ -12,10 +12,12 @@ int binarySearch(int x){
 }
 
 int main() {
-    int i, goal, res;
-    for(i=0;i<11111;i++){
+    int i = 0, goal, res;
+    while (i < 11111)
+      {
         arr[i] = i;
-    }
+        i = i + 1;
+      }
     goal=100;
     res = binarySearch(goal);
     return 0;

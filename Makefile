@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = 
+CFLAGS =
 
 OBJS = main.o util.o lex.yy.o
-TARGET = compiler.out
+TARGET = 20141500
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) -lfl
