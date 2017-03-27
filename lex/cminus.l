@@ -1,5 +1,5 @@
 /****************************************************/
-/* File: tiny.l                                     */
+/* File: cminus.l                                   */
 /* Lex specification for C-                         */
 /* Compiler Construction: Principles and Practice   */
 /****************************************************/
@@ -20,6 +20,9 @@ newline     \n
 whitespace  [ \t]+
 
 %%
+
+{letter}+{number}({letter}|{number})+ {return ERROR;}
+{number}+{letter}({letter}|{number})+ {return ERROR;}
 
 "if"            {return IF;}
 "else"          {return ELSE;}
