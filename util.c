@@ -36,7 +36,7 @@ printToken(TokenType token, const char* tokenString)
 
     case PLUS: fprintf(listing,"+\t\t\t+\n"); break;
     case MINUS: fprintf(listing,"-\t\t\t-\n"); break;
-    case TIMES: fprintf(listing,"*\t\t\t-\n"); break;
+    case TIMES: fprintf(listing,"*\t\t\t*\n"); break;
     case OVER: fprintf(listing,"/\t\t\t/\n"); break;
 
     case LT: fprintf(listing,"<\t\t\t<\n"); break;
