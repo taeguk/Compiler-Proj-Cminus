@@ -29,7 +29,6 @@ whitespace  [ \t]+
 <COMMENT>"*/"       { BEGIN(INITIAL); }
 <COMMENT>.          { /* skip comments */ }
 <COMMENT>{newline}  { lineno++; }
-<COMMENT>"/*"       { return ERROR; }
 <COMMENT><<EOF>>    { BEGIN(INITIAL); return ERROR; }
 "*/"                { return ERROR; }
 <<EOF>>             { return ENDFILE; }
