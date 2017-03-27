@@ -34,6 +34,8 @@ whitespace  [ \t]+
 "*/"                { return ERROR; }
 <<EOF>>             { return ENDFILE; }
 
+({letter}+{digit}|{digit}+{letter})({letter}|{digit})* { return ERROR; }
+
 "else"              { return ELSE; }
 "if"                { return IF; }
 "int"               { return INT; }
