@@ -1,5 +1,5 @@
 /****************************************************/
-/* File: tiny.l                                     */
+/* File: cm.l                                       */
 /* Lex specification for TINY                       */
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
@@ -13,12 +13,6 @@
 /* lexeme of identifier or reserved word */
 char tokenString[MAXTOKENLEN+1];
 %}
-keywords    else|if|int|return|void|while
-arithmetic  "+"|"-"|"*"|"/"
-logical     "<"|"<="|">"|">="|"=="|"!="
-paren       "("|")"|"["|"]"|"{"|"}"
-special_sym {arithmetic}|{logical}|{paren}|";"|","|"="
-
 letter      [a-zA-Z]
 identifier  {letter}+
 digit       [0-9]
@@ -26,8 +20,34 @@ digit       [0-9]
 newline     \n
 whitespace  [ \t]+
 %%
-{keywords}      {return KEYWORD;}
-{special_sym}   {return SYMBOL;}
+"else"      { return ELSE; }
+"if"        { return IF; }
+"int"       { return INT; }
+"return"    { return RETURN; }
+"void"      { return VOID; }
+"while"     { return WHILE; }
+
+"<="        { return LE_OP; }
+">="        { return GE_OP; }
+"=="        { return EQ_OP; }
+"!="        { return NE_OP; }
+";"         { return ';'; }
+"}"         { return '}'; }
+"{"         { return '{'; }
+","         { return ','; }
+"="         { return '='; }
+"("         { return '('; }
+")"         { return ')'; }
+"["         { return '['; }
+"]"         { return ']'; }
+"-"         { return '-'; }
+"+"         { return '+'; }
+"*"         { return '*'; }
+"/"         { return '/'; }
+"<"         { return '<'; }
+">"         { return '>'; }
+
+
 {identifier}    {return ID;}
 {digit}         {return NUM;}
 {newline}       {lineno++;}
