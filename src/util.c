@@ -16,7 +16,9 @@ void printToken( TokenType token, const char* token_string )
 {
   switch (token)
     {
-    case KEYWORD:
+    case ELSE:  case IF:
+    case INT:   case RETURN:
+    case VOID:  case WHILE:
         {
           int i;
           int diff = 'A' - 'a';
@@ -26,8 +28,17 @@ void printToken( TokenType token, const char* token_string )
             fprintf(listing, "\t");
           fprintf(listing, "\t%s\n", token_string);
         } break;
-    case PAREN:
-    case SYMBOL:
+
+    case LE_OP: case GE_OP:
+    case EQ_OP: case NE_OP:
+    case ';': case '}':
+    case '{': case ',':
+    case '=':
+    case '(': case ')':
+    case '[': case ']':
+    case '-': case '+':
+    case '*': case '/':
+    case '<': case '>':
       fprintf(listing,
               "%s\t\t%s\n", token_string, token_string);
       break;

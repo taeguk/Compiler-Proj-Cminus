@@ -30,9 +30,10 @@ typedef enum
       /* book-keeping tokens */
       ENDFILE,ERROR,
       /* multicharacter tokens */
-      KEYWORD, ID, NUM,
+      ELSE, IF, INT, RETURN, VOID, WHILE,
+      ID, NUM,
       /* special symbols */
-      SYMBOL, PAREN
+      LE_OP, GE_OP, EQ_OP, NE_OP,
    } TokenType;
 
 extern FILE* source; /* source code text file */
