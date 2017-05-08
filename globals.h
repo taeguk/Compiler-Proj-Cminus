@@ -15,6 +15,10 @@
 #include <ctype.h>
 #include <string.h>
 
+#ifndef YYPARSER
+#include "cm.tab.h"
+#endif
+
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -26,24 +30,27 @@
 /* MAXRESERVED = the number of reserved words */
 #define MAXRESERVED 8
 
-typedef enum 
-   {
-    /* book-keeping tokens */
-    ENDFILE,ERROR,
-    /* multicharacter tokens */
-    ID,NUM,
-    /* reserved words */
-    ELSE,IF,INT,RETURN,VOID,WHILE,
-    /* special symbols */
-    /* + - * / */
-    PLUS,MINUS,TIMES,OVER,
-    /* < <= > >= == != */
-    LT,LE,GT,GE,EQ,NE,
-    /* = ; , */
-    ASSIGN,SEMI,COMMA,
-    /* ( ) [ ] { } */
-    LPAREN,RPAREN,LBRACK,RBRACK,LBRACE,RBRACE,
-   } TokenType;
+typedef int TokenType;
+
+/*
+// TokenType values
+
+// book-keeping tokens
+ENDFILE ERROR
+
+// multicharacter tokens
+ID NUM
+
+// reserved words
+ELSE IF INT RETURN VOID WHILE
+
+// special symbols
+PLUS(+) MINUS(-) TIMES(*) OVER(/)
+LT(<) LE (<=) GT(>) GE(>=) EQ(==) NE(!=)
+ASSIGN(=) SEMI(;) COMMA(,)
+LPAREN(() RPAREN()) LBRACK([) RBRACK(]) LBRACE({) RBRACE(})
+
+*/
 
 extern FILE* source; /* source code text file */
 extern FILE* listing; /* listing output text file */
