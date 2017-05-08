@@ -4,7 +4,7 @@ EXEC=20141589
 
 .SUFFIXES: .c .o
 
-LEXCODE=cminus.l
+LEXCODE=cm.l
 LEXSRC=lex.yy.c
 SRCS=main.c util.c $(LEXSRC)
 OBJS=$(SRCS:.c=.o)
