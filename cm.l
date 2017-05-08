@@ -6,6 +6,10 @@
 /* Modified by Kwanghee Choi                        */
 /****************************************************/
 
+%option noyywrap
+%option noinput
+%option nounput
+
 %{
 #include "globals.h"
 #include "util.h"
@@ -92,10 +96,4 @@ getToken(void)
       printToken(currentToken,tokenString);
     }
   return currentToken;
-}
-
-int
-yywrap(void)
-{
-  return 1;
 }
