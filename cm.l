@@ -78,12 +78,12 @@ getToken(void)
   static int firstTime = TRUE;
   TokenType currentToken;
   if (firstTime)
-  {
-    firstTime = FALSE;
-    lineno++;
-    yyin = source;
-    yyout = listing;
-  }
+    {
+      firstTime = FALSE;
+      lineno++;
+      yyin = source;
+      yyout = listing;
+    }
   currentToken = yylex();
   strncpy(tokenString,yytext,MAXTOKENLEN);
   if (TraceScan)
