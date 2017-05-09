@@ -22,24 +22,36 @@
 #define TRUE 1
 #endif
 
-/* MAXRESERVED = the number of reserved words */
-#define MAXRESERVED 8
+#define YYDEBUG 1
 
-typedef enum 
-    /* book-keeping tokens */
+#ifndef YYPARSER
+#include "cminus.tab.h"
+#define ENDFILE 0
+#endif
+
+typedef int TokenType;
+
+/* MAXRESERVED = the number of reserved words */
+#define MAXRESERVED 6
+
+/*
+#define YYTOKENTYPE
+typedef enum yytokentype 
+    // book-keeping tokens 
    {ENDFILE,ERROR,
-    /* reserved words */
+    // reserved words
     IF,ELSE,INT,RETURN,VOID,WHILE,
-    /* multicharacter tokens */
+    // multicharacter tokens 
     ID,NUM,
-    /* special symbols */
+    // special symbols
     PLUS,MINUS,TIMES,OVER,
     LT,LTEQ,GT,GTEQ,EQ,NOTEQ,
     ASSIGN,
     SEMI,COMMA,
-    LPAREN,RPAREN,LBRACE,RBRACE,LBRACKET,RBRACKET,
+    LPAREN,RPAREN,LBRACE,RBRACE,LBRACKET,RBRACKET, // ( ) { } [ ]
     COMMENT, COMMENT_ERROR
    } TokenType;
+*/
 
 extern FILE* source; /* source code text file */
 extern FILE* listing; /* listing output text file */
@@ -51,24 +63,37 @@ extern int lineno; /* source line number for listing */
 /***********   Syntax tree for parsing ************/
 /**************************************************/
 
-typedef enum {StmtK,ExpK} NodeKind;
-typedef enum {IfK,RepeatK,AssignK,ReadK,WriteK} StmtKind;
-typedef enum {OpK,ConstK,IdK} ExpKind;
+typedef enum {StmtK, ExpK, DeclK, TypeK} NodeKind;
+typedef enum {CompK, SelectK, IterK, RetK} StmtKind;
+typedef enum {AssignK, OpK, ConstK, IdK, IdArrK, CallK} ExpKind;
+typedef enum {FuncK, VarK, VarArrK} DeclKind;
+typedef enum {TypeSpecK} TypeKind;
 
 /* ExpType is used for type checking */
-typedef enum {Void,Integer,Boolean} ExpType;
+typedef enum {Void, Integer} ExpType;
 
 #define MAXCHILDREN 3
+
+typedef struct arrayAttr
+  {
+    char *name;
+    int len; /* -1 means an array in parameter. */
+  } ArrayAttr;
 
 typedef struct treeNode
    { struct treeNode * child[MAXCHILDREN];
      struct treeNode * sibling;
      int lineno;
      NodeKind nodekind;
-     union { StmtKind stmt; ExpKind exp;} kind;
+     union { StmtKind stmt;
+             ExpKind exp; 
+             DeclKind decl; 
+             TypeKind type; } kind;
      union { TokenType op;
              int val;
-             char * name; } attr;
+             char * name;
+             TokenType typeSpec;
+             ArrayAttr arrAttr; } attr;
      ExpType type; /* for type checking of exps */
    } TreeNode;
 

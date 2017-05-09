@@ -16,18 +16,19 @@
 // need to be refactored.
 const char * TokenTypeStringTable[] = 
 {
-  "ENDFILE", "ERROR",
+  [ENDFILE] = "ENDFILE", 
+  [ERROR] = "ERROR",
   /* reserved words */
-  "IF","ELSE","INT","RETURN","VOID","WHILE",
+  [IF] = "IF", [ELSE] = "ELSE", [INT] = "INT", [RETURN] = "RETURN", [VOID] = "VOID", [WHILE] = "WHILE",
   /* multicharacter tokens */
-  "ID","NUM",
+  [ID] = "ID", [NUM] = "NUM",
   /* special symbols */
-  "PLUS","MINUS","TIMES","OVER",
-  "LT","LTEQ","GT","GTEQ","EQ","NOTEQ",
-  "ASSIGN",
-  "SEMI","COMMA",
-  "LPAREN","RPAREN","LBRACE","RBRACE","LBRACKET","RBRACKET",
-  "COMMENT"
+  [PLUS] = "PLUS", [MINUS] = "MINUS", [TIMES] = "TIMES", [OVER] = "OVER",
+  [LT] = "LT", [LTEQ] = "LTEQ", [GT] = "GT", [GTEQ] = "GTEQ", [EQ] = "EQ", [NOTEQ] = "NOTEQ",
+  [ASSIGN] = "ASSIGN",
+  [SEMI] = "SEMI", [COMMA] = "COMMA",
+  [LPAREN] = "LPAREN", [RPAREN] = "RPAREN", [LBRACE] = "LBRACE", [RBRACE] = "RBRACE", [LBRACKET] = "LBRACKET", [RBRACKET] = "RBRACKET",
+  [COMMENT] = "COMMENT"
 };
 
 void printToken( TokenType token, const char* tokenString )
@@ -97,6 +98,42 @@ TreeNode * newExpNode(ExpKind kind)
   return t;
 }
 
+/* Function newDeclNode creates a new expression 
+ * node for syntax tree construction
+ */
+TreeNode * newDeclNode(DeclKind kind)
+{ TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
+  int i;
+  if (t==NULL)
+    fprintf(listing,"Out of memory error at line %d\n",lineno);
+  else {
+    for (i=0;i<MAXCHILDREN;i++) t->child[i] = NULL;
+    t->sibling = NULL;
+    t->nodekind = DeclK;
+    t->kind.decl = kind;
+    t->lineno = lineno;
+  }
+  return t;
+}
+
+/* Function newTypeNode creates a new expression 
+ * node for syntax tree construction
+ */
+TreeNode * newTypeNode(TypeKind kind)
+{ TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
+  int i;
+  if (t==NULL)
+    fprintf(listing,"Out of memory error at line %d\n",lineno);
+  else {
+    for (i=0;i<MAXCHILDREN;i++) t->child[i] = NULL;
+    t->sibling = NULL;
+    t->nodekind = TypeK;
+    t->kind.type = kind;
+    t->lineno = lineno;
+  }
+  return t;
+}
+
 /* Function copyString allocates and makes a new
  * copy of an existing string
  */
@@ -128,6 +165,24 @@ static void printSpaces(void)
     fprintf(listing," ");
 }
 
+static void printOp(TokenType op)
+{ switch (op)
+    { 
+    case PLUS: fprintf(listing,"+\n"); break;
+    case MINUS: fprintf(listing,"-\n"); break;
+    case TIMES: fprintf(listing,"*\n"); break;
+    case OVER: fprintf(listing,"/\n"); break;
+    case LT: fprintf(listing,"<\n"); break;
+    case LTEQ: fprintf(listing,"<=\n"); break;
+    case GT: fprintf(listing,">\n"); break;
+    case GTEQ: fprintf(listing,">=\n"); break;
+    case EQ: fprintf(listing,"==\n"); break;
+    case NOTEQ: fprintf(listing,"!=\n"); break;
+    default: /* should never happen */
+      fprintf(listing,"Unknown op: %d\n", op);
+    }
+}
+
 /* procedure printTree prints a syntax tree to the 
  * listing file using indentation to indicate subtrees
  */
@@ -138,42 +193,80 @@ void printTree( TreeNode * tree )
     printSpaces();
     if (tree->nodekind==StmtK)
     { switch (tree->kind.stmt) {
-        case IfK:
-          fprintf(listing,"If\n");
+        case CompK:
+          fprintf(listing,"Compound Statement\n");
           break;
-        case RepeatK:
-          fprintf(listing,"Repeat\n");
+        case SelectK:
+          fprintf(listing,"Select Statement\n");
           break;
+        case IterK:
+          fprintf(listing,"Iteration Statement\n");
+          break;
+        case RetK:
+          fprintf(listing,"Return Statement\n");
+          break;
+        default:
+          fprintf(listing,"Unknown StmtNode kind\n");
+          break;
+      }
+    }
+    else if (tree->nodekind==ExpK)
+    { switch (tree->kind.exp) {
         case AssignK:
-          fprintf(listing,"Assign to: %s\n",tree->attr.name);
+          fprintf(listing,"Assign: \n");
           break;
-        case ReadK:
-          fprintf(listing,"Read: %s\n",tree->attr.name);
+        case OpK:
+          fprintf(listing,"Op: ");
+          printOp(tree->attr.op);
           break;
-        case WriteK:
-          fprintf(listing,"Write\n");
+        case ConstK:
+          fprintf(listing,"Constant: %d\n", tree->attr.val);
+          break;
+        case IdK:
+          fprintf(listing,"Id: %s\n", tree->attr.name);
+          break;
+        case IdArrK:
+          fprintf(listing,"Id Of Array: %s\n", tree->attr.name);
+          break;
+        case CallK:
+          fprintf(listing,"Call Function: %s\n", tree->attr.name);
           break;
         default:
           fprintf(listing,"Unknown ExpNode kind\n");
           break;
       }
     }
-    else if (tree->nodekind==ExpK)
-    { switch (tree->kind.exp) {
-        case OpK:
-          fprintf(listing,"Op: ");
-          printToken(tree->attr.op,"\0");
+    else if (tree->nodekind==DeclK)
+    { switch (tree->kind.decl) {
+        case FuncK:
+          fprintf(listing,"Function Declaration: %s\n", tree->attr.name);
           break;
-        case ConstK:
-          fprintf(listing,"Const: %d\n",tree->attr.val);
+        case VarK:
+          fprintf(listing,"Variable Declaration: %s\n", tree->attr.name);
           break;
-        case IdK:
-          fprintf(listing,"Id: %s\n",tree->attr.name);
+        case VarArrK:
+          if (tree->attr.arrAttr.len != -1)
+            fprintf(listing, "Array Declaration: name = %s, size = %d\n", 
+                  tree->attr.arrAttr.name, tree->attr.arrAttr.len);
+          else
+            fprintf(listing, "Array Declaration In Parameter: name = %s\n", tree->attr.arrAttr.name);
           break;
         default:
-          fprintf(listing,"Unknown ExpNode kind\n");
+          fprintf(listing,"Unknown DeclNode kind\n");
           break;
       }
+    }
+    else if (tree->nodekind==TypeK)
+    { 
+      switch (tree->attr.typeSpec)
+        {
+        case INT:
+          fprintf(listing, "Type: INT\n");
+          break;
+        case VOID:
+          fprintf(listing, "Type: VOID\n");
+          break;
+        }
     }
     else fprintf(listing,"Unknown node kind\n");
     for (i=0;i<MAXCHILDREN;i++)

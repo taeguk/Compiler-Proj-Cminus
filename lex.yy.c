@@ -983,37 +983,19 @@ YY_RULE_SETUP
                     }
                   while (c != EOF);
                   return COMMENT_ERROR;
-                     /* 
-
-
-                      while ((c = input()) != '*' && c != EOF)
-                      if (c == '*')
-                        {
-                          while ((c = input()) == '*')
-                            ;
-                          if (c == '/')
-                            break;
-                        }
-                      if (c == EOF)
-                        {
-                          //error("EOF in comment");
-                          break;
-                        }
-                    }
-                    */
                 }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 105 "lex/cminus.l"
+#line 87 "lex/cminus.l"
 {return ERROR;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 107 "lex/cminus.l"
+#line 89 "lex/cminus.l"
 ECHO;
 	YY_BREAK
-#line 1017 "lex.yy.c"
+#line 999 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2014,7 +1996,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 107 "lex/cminus.l"
+#line 89 "lex/cminus.l"
 
 
 

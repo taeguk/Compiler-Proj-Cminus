@@ -83,24 +83,6 @@ whitespace  [ \t]+
                     }
                   while (c != EOF);
                   return COMMENT_ERROR;
-                     /* 
-
-
-                      while ((c = input()) != '*' && c != EOF)
-                      if (c == '*')
-                        {
-                          while ((c = input()) == '*')
-                            ;
-                          if (c == '/')
-                            break;
-                        }
-                      if (c == EOF)
-                        {
-                          //error("EOF in comment");
-                          break;
-                        }
-                    }
-                    */
                 }
 .               {return ERROR;}
 
