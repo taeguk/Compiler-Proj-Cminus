@@ -12,7 +12,7 @@ BISONSRC=cm.tab.c
 BISONHDR=cm.tab.h
 BISONVERBOSE=cm.output
 
-SRCS=main.c util.c parse.c $(LEXSRC) $(BISONSRC)
+SRCS=main.c util.c $(LEXSRC) $(BISONSRC)
 OBJS=$(SRCS:.c=.o)
 
 $(EXEC): $(LEXSRC) $(BISONSRC) $(OBJS)
