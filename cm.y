@@ -11,16 +11,17 @@
 #include "globals.h"
 #include "util.h"
 #include "scan.h"
+#include "parse.h"
 
 #define YYSTYPE TreeNode *
-static char * savedName; /* for use in assignments */
-static int savedLineNo;  /* ditto */
+
 static TreeNode * savedTree; /* stores syntax tree for later return */
 
-int yylex(void);
+static int yylex(void);
 int yyerror(char*);
 %}
 
+%token MINIMUM_TOKEN
 %token ID NUM
 %token ELSE IF INT RETURN VOID WHILE
 %token PLUS MINUS TIMES OVER
@@ -28,6 +29,10 @@ int yyerror(char*);
 %token ASSIGN SEMI COMMA
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
 %token ENDFILE ERROR
+%token MAXIMUM_TOKEN
+
+%nonassoc LOWER_ELSE
+%nonassoc ELSE
 
 %start program
 
@@ -40,17 +45,7 @@ program
 
 declaration_list
         : declaration_list declaration
-          { // $$ = addSibling($1, $2);
-            /*
-            YYSTYPE node = $1;
-            if(node == NULL) $$ = $2;
-            else {
-              while(node->sibling != NULL) node = node->sibling;
-              node->sibling = $2;
-              $$ = $1;
-            }
-            */
-          }
+          { $$ = addSibling($1, $2); }
         | declaration
           { $$ = $1; }
         ;
@@ -63,23 +58,21 @@ declaration
         ;
 
 var_declaration
-        : type_specifier ID SEMI
-          { // $$ = newVariableDeclarationNode(type_specifier, ID, SINGLE, 0); }
-        | type_specifier ID LBRACK NUM RBRACK SEMI
-          { // $$ = newVariableDeclarationNode(type_specifier, ID, ARRAY, NUM); }
-          /* exception handling for num! */
+        : type_specifier _id SEMI
+          { $$ = newVariableDeclarationNode($1, $2); }
+        | type_specifier _id LBRACK _num RBRACK SEMI
+          { $$ = newArrayDeclarationNode($1, $2, $4); }
         ;
 
 type_specifier
         : INT
-          { $$ = INT; }
+          { $$ = newTokenTypeNode(INT); }
         | VOID
-          { $$ = VOID; }
-        ;
+          { $$ = newTokenTypeNode(VOID); }
 
 fun_declaration
-        : type_specifier ID LPAREN params RPAREN compound_stmt
-          { // $$ = newFunctionDeclaratonNode(type_specifier, ID, params, compound_stmt); }
+        : type_specifier _id LPAREN params RPAREN compound_stmt
+          { $$ = newFunctionDeclarationNode($1, $2, $4, $6); }
         ;
 
 params
@@ -91,33 +84,33 @@ params
 
 param_list
         : param_list COMMA param
-          { // $$ = addSibling($1, $3); }
+          { $$ = addSibling($1, $3); }
         | param
-          { // $$ = newParameterListNode(param); }
+          { $$ = $1; }
         ;
 
 param
-        : type_specifier ID
-          { // $$ = newParameterNode(type_specifier, SINGLE, ID); }
-        | type_specifier ID LBRACK RBRACK
-          { // $$ = newParameterNode(type_specifier, ARRAY, ID); }
+        : type_specifier _id
+          { $$ = newVariableParameterNode($1, $2); }
+        | type_specifier _id LBRACK RBRACK
+          { $$ = newArrayParameterNode($1, $2); }
         ;
 
 compound_stmt
         : LBRACE local_declarations statement_list RBRACE
-          { // $$ = newCompoundStatementNode(local_declarations, statement_list); }
+          { $$ = newCompoundStatementNode($2, $3); }
         ;
 
 local_declarations
         : local_declarations var_declaration
-          { // $$ = addSibling($1, $2); }
+          { $$ = addSibling($1, $2); }
         | /* empty */
           { $$ = NULL; }
         ;
 
 statement_list
         : statement_list statement
-          { // $$ = addSibling($1, $2); }
+          { $$ = addSibling($1, $2); }
         | /* empty */
           { $$ = NULL; }
         ;
@@ -137,108 +130,108 @@ statement
 
 expression_stmt
         : expression SEMI
-          { // $$ = newExpressionStatementNode(expression); }
+          { $$ = newExpressionStatementNode($1); }
         | SEMI
-          { // $$ = newExpressionStatementNode(NULL); }
+          { $$ = NULL; }
         ;
 
 selection_stmt
         : IF LPAREN expression RPAREN statement
-          { // $$ = newSelectionStatementNode(expression, statement, NULL); }
+          { $$ = newSelectionStatementNode($3, $5, NULL); }
+          %prec LOWER_ELSE
         | IF LPAREN expression RPAREN statement ELSE statement
-          { // $$ = newSelectionStatementNode(expression, statement, statement); }
+          { $$ = newSelectionStatementNode($3, $5, $7); }
         ;
 
 iteration_stmt
         : WHILE LPAREN expression RPAREN statement
-          { // $$ = newIterationStatementNode(expression, statement); }
+          { $$ = newIterationStatementNode($3, $5); }
         ;
 
 return_stmt
         : RETURN SEMI
-          { // $$ = newReturnStatementNode(NULL); }
+          { $$ = newReturnStatementNode(NULL); }
         | RETURN expression SEMI
-          { // $$ = newReturnStatementNode(expression); }
+          { $$ = newReturnStatementNode($2); }
         ;
 
 expression
         : var ASSIGN expression
-         { // $$ = newAssignExpressionNode(var, expression); }
+         { $$ = newAssignExpressionNode($1, $3); }
         | simple_expression
          { $$ = $1; }
         ;
 
 var
-        : ID
-          { // $$ = newVariableNode(ID, NULL); }
-        | ID LBRACK expression RBRACK
-          { // $$ = newVariableNode(ID, expression); }
+        : _id
+          { $$ = $1; }
+        | _id LBRACK expression RBRACK
+          { $$ = newArrayNode($1, $3); }
         ;
 
 simple_expression
         : additive_expression relop additive_expression
-          { // $$ = newComparisonExpressionNode(additive_expression, relop, additive_expression); }
+          { $$ = newComparisonExpressionNode($1, $2, $3); }
         | additive_expression
           { $$ = $1; }
         ;
 
 relop
         : LT
-          { $$ = LT; }
+          { $$ = newTokenTypeNode(LT); }
         | LE
-          { $$ = LE; }
+          { $$ = newTokenTypeNode(LE); }
         | GT
-          { $$ = GT; }
+          { $$ = newTokenTypeNode(GT); }
         | GE
-          { $$ = GE; }
+          { $$ = newTokenTypeNode(GE); }
         | EQ
-          { $$ = EQ; }
+          { $$ = newTokenTypeNode(EQ); }
         | NE
-          { $$ = NE; }
+          { $$ = newTokenTypeNode(NE); }
         ;
 
 additive_expression
         : additive_expression addop term
-          { // $$ = newAdditiveExpressionNode(additive_expression, addop, term); }
+          { $$ = newAdditiveExpressionNode($1, $2, $3); }
         | term
           { $$ = $1; }
         ;
 
 addop
         : PLUS
-          { $$ = PLUS; }
+          { $$ = newTokenTypeNode(PLUS); }
         | MINUS
-          { $$ = MINUS; }
-        ;
+          { $$ = newTokenTypeNode(MINUS); }
 
 term
         : term mulop factor
-          { // $$ = newMultiplicativeExpressionNode(additive_expression, addop, term); }
+          { $$ = newMultiplicativeExpressionNode($1, $2, $3); }
         | factor
           { $$ = $1; }
         ;
 
 mulop
         : TIMES
-          { $$ = TIMES; }
+          { $$ = newTokenTypeNode(TIMES); }
         | OVER
-          { $$ = OVER; }
+          { $$ = newTokenTypeNode(OVER); }
         ;
 
 factor
         : LPAREN expression RPAREN
           { $$ = $2; }
-        | var_declaration
+        | var
           { $$ = $1; }
         | call
           { $$ = $1; }
-        | NUM
-          { // $$ = newConstantExpressionNode(NUM); }
+        | _num
+          { $$ = $1; }
         ;
 
 call
-        : ID LPAREN args RPAREN
-          { // $$ = newCallNode(ID, args); }
+        : _id LPAREN args RPAREN
+          { $$ = newCallNode($1, $3); }
         ;
 
 args
@@ -254,15 +247,47 @@ arg_list
         | expression
           { $$ = $1; }
         ;
+
+_id
+        : ID
+          { $$ = newVariableNode(tokenString); }
+        ;
+
+_num
+        : NUM
+          { $$ = newConstantNode(tokenString); }
+        ;
+
 %%
 
 int yyerror(char * message)
 {
-  fprintf(listing,"Syntax error at line %d: %s\n",lineno,message);
-  fprintf(listing,"Current token: ");
+  fprintf(listing,
+          "Syntax error at line %d: %s\n",
+          lineno,
+          message);
+  fprintf(listing, "Current token: ");
   printToken(yychar,tokenString);
   Error = TRUE;
   return 0;
+}
+
+static int yylex(void)
+{
+  TokenType tok = getToken();
+  if (tok == ENDFILE) return 0;
+  if (tok == ERROR)
+    {
+      fprintf(listing,
+              "Lexical analyze error at line %d\n",
+              lineno);
+      fprintf(listing,
+              "Current token: %s",
+              tokenString);
+      Error = TRUE;
+      return 0;
+    }
+  return tok;
 }
 
 TreeNode * parse(void)
