@@ -544,7 +544,7 @@ void
 printTree(TreeNode* tree)
 {
   INDENT;
-  if (tree == NULL) PRINTDESC("(null)");
+  if (tree == NULL) PRINTDESC("(null)\n");
   for (; tree != NULL; tree = tree->sibling)
     {
       switch (tree->nodeKind)
@@ -662,7 +662,7 @@ printTree(TreeNode* tree)
           break;
 
         case VariableK:
-          PRINTDESC("Variable Id : %s", tree->attr.ID);
+          PRINTDESC("Variable Id : %s\n", tree->attr.ID);
           break;
 
         case ArrayK:
@@ -680,18 +680,17 @@ printTree(TreeNode* tree)
           break;
 
         case ConstantK:
-          PRINTDESC("Constant : %d", tree->attr.NUM);
+          PRINTDESC("Constant : %d\n", tree->attr.NUM);
           break;
 
         case TokenTypeK:
-          PRINTDESC("Token : %s", operatorString(tree->attr.token_type));
+          PRINTDESC("Token : %s\n", operatorString(tree->attr.token_type));
           break;
 
         default:
           PRINTDESC("[DEBUG] No such nodeKind\n");
         }
     }
-  PRINTDESC("\n");
   UNINDENT;
 }
 
