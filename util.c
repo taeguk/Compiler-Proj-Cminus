@@ -61,6 +61,9 @@ printToken(TokenType token, const char* tokenString)
     case ELSE:    fprintf(listing,
                           "ELSE\t\t\t%s\n",
                           tokenString); break;
+    case IF:      fprintf(listing,
+                          "IF\t\t\t%s\n",
+                          tokenString); break;
     case INT:     fprintf(listing,
                           "INT\t\t\t%s\n",
                           tokenString); break;
@@ -682,22 +685,6 @@ printTree(TreeNode* tree)
 
         case TokenTypeK:
           PRINTDESC("Token : %s", operatorString(tree->attr.token_type));
-          break;
-
-        case ParameterRange:
-          PRINTDESC("[DEBUG] ParameterRange at printTree\n");
-          break;
-
-        case StatementRange:
-          PRINTDESC("[DEBUG] StatementRange at printTree\n");
-          break;
-
-        case ExpressionRange:
-          PRINTDESC("[DEBUG] ExpressionRange at printTree\n");
-          break;
-
-        case VariableRange:
-          PRINTDESC("[DEBUG] VariableRange at printTree\n");
           break;
 
         default:

@@ -89,12 +89,6 @@ typedef enum {
 
     ConstantK,
     TokenTypeK,
-
-    // Error codes
-    ParameterRange,
-    StatementRange,
-    ExpressionRange,
-    VariableRange,
 } NodeKind;
 
 /* ExpType is used for type checking */
