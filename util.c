@@ -10,6 +10,34 @@
 #include "globals.h"
 #include "util.h"
 
+static const char * const nodeName[] = {
+    "ErrorK",
+    "VariableDeclarationK",
+    "ArrayDeclarationK",
+    "FunctionDeclarationK",
+    "VariableParameterK",
+    "ArrayParameterK",
+
+    "CompoundStatementK",
+
+    "ExpressionStatementK",
+    "SelectionStatementK",
+    "IterationStatementK",
+    "ReturnStatementK",
+    "AssignExpressionK",
+
+    "ComparisonExpressionK",
+    "AdditiveExpressionK",
+    "MultiplicativeExpressionK",
+
+    "VariableK",
+    "ArrayK",
+    "CallK",
+
+    "ConstantK",
+    "TokenTypeK"
+};
+
 /* Procedure printToken prints a token 
  * and its lexeme to the listing file
  */
@@ -114,53 +142,327 @@ printToken(TokenType token, const char* tokenString)
   }
 }
 
-/* Function newStmtNode creates a new statement
- * node for syntax tree construction
- */
 TreeNode*
-newStmtNode(StmtKind kind)
+addSibling(TreeNode *origin, TreeNode *follow)
 {
-  TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
-  int i;
-  if (t==NULL)
+  if (origin != NULL) {
+    TreeNode *t = origin;
+    while (t->sibling != NULL) t = t->sibling;
+    t->sibling = follow;
+  }
+  else {
+    origin = follow;
+  }
+  return origin;
+}
+
+TreeNode*
+allocateTreeNode(void)
+{
+  TreeNode *t = calloc(1, sizeof(TreeNode));
+  if (t == NULL)
     {
       fprintf(listing,
-              "Out of memory error at line %d\n",lineno);
+              "Out of memory error at line %d\n",
+              lineno);
     }
   else
     {
-      for (i=0;i<MAXCHILDREN;i++) t->child[i] = NULL;
       t->sibling = NULL;
-      t->nodekind = StmtK;
-      t->kind.stmt = kind;
       t->lineno = lineno;
+    }
+
+  return t;
+}
+
+TreeNode*
+newVariableDeclarationNode(TreeNode *type_specifier,
+                           TreeNode *_id)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = VariableDeclarationK;
+      t->attr.type_specifier = type_specifier;
+      t->attr._id = _id;
+    }
+
+  return t;
+}
+
+TreeNode*
+newArrayDeclarationNode(TreeNode *type_specifier,
+                        TreeNode *_id,
+                        TreeNode *_num)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = ArrayDeclarationK;
+      t->attr.type_specifier = type_specifier;
+      t->attr._id = _id;
+      t->attr._num = _num;
+
+    }
+
+  return t;
+}
+
+TreeNode*
+newFunctionDeclarationNode(TreeNode *type_specifier,
+                           TreeNode *_id,
+                           TreeNode *params,
+                           TreeNode *compound_stmt)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = FunctionDeclarationK;
+      t->attr.type_specifier = type_specifier;
+      t->attr._id = _id;
+      t->attr.params = params;
+      t->attr.compound_stmt = compound_stmt;
+    }
+
+  return t;
+}
+
+TreeNode*
+newVariableParameterNode(TreeNode *type_specifier,
+                         TreeNode *_id)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = VariableParameterK;
+      t->attr.type_specifier = type_specifier;
+      t->attr._id = _id;
+    }
+
+  return t;
+}
+
+TreeNode*
+newArrayParameterNode(TreeNode *type_specifier,
+                      TreeNode *_id)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = ArrayParameterK;
+      t->attr.type_specifier = type_specifier;
+      t->attr._id = _id;
+    }
+
+  return t;
+}
+
+TreeNode*
+newCompoundStatementNode(TreeNode *local_declarations, // nullable
+                         TreeNode *statement_list) // nullable
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = CompoundStatementK;
+      t->attr.local_declarations = local_declarations;
+      t->attr.statement_list = statement_list;
+    }
+
+  return t;
+}
+
+TreeNode*
+newExpressionStatementNode(TreeNode *expression) // nullable
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = ExpressionStatementK;
+      t->attr.expression = expression;
+    }
+
+  return t;
+}
+
+TreeNode*
+newSelectionStatementNode(TreeNode *expression, // nullable
+                          TreeNode *if_statement,
+                          TreeNode *else_statement) // nullable
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = SelectionStatementK;
+      t->attr.expression = expression;
+      t->attr.if_statement = if_statement;
+      t->attr.else_statement = else_statement;
+    }
+
+  return t;
+}
+
+TreeNode*
+newIterationStatementNode(TreeNode *expression,
+                          TreeNode *statement) // nullable
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = IterationStatementK;
+      t->attr.expression = expression;
+      t->attr.loop_statement = statement;
+    }
+
+  return t;
+}
+
+TreeNode*
+newReturnStatementNode(TreeNode *expression) // nullable
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = ReturnStatementK;
+      t->attr.expression = expression;
+    }
+
+  return t;
+}
+
+TreeNode*
+newAssignExpressionNode(TreeNode *var,
+                        TreeNode *expression)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = AssignExpressionK;
+      t->attr.var = var;
+      t->attr.expression = expression;
+    }
+
+  return t;
+}
+
+TreeNode*
+newComparisonExpressionNode(TreeNode *left_expression,
+                            TreeNode *relop,
+                            TreeNode *right_expression)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = ComparisonExpressionK;
+      t->attr.left_expression = left_expression;
+      t->attr.operator_specifier = relop;
+      t->attr.right_expression = right_expression;
+    }
+
+  return t;
+}
+
+TreeNode*
+newAdditiveExpressionNode(TreeNode *left_expression,
+                          TreeNode *addop,
+                          TreeNode *right_expression)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = AdditiveExpressionK;
+      t->attr.left_expression = left_expression;
+      t->attr.operator_specifier = addop;
+      t->attr.right_expression = right_expression;
+    }
+
+  return t;
+}
+
+TreeNode*
+newMultiplicativeExpressionNode(TreeNode *left_expression,
+                                TreeNode *mulop,
+                                TreeNode *right_expression)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = MultiplicativeExpressionK;
+      t->attr.left_expression = left_expression;
+      t->attr.operator_specifier = mulop;
+      t->attr.right_expression = right_expression;
+    }
+
+  return t;
+}
+
+TreeNode *
+newVariableNode(char *ID)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = VariableK;
+      t->attr.ID = copyString(ID);
     }
   return t;
 }
 
-/* Function newExpNode creates a new expression 
- * node for syntax tree construction
- */
-TreeNode*
-newExpNode(ExpKind kind)
+TreeNode *
+newArrayNode(TreeNode *_id,
+             TreeNode *expression)
 {
-  TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
-  int i;
-  if (t==NULL)
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
     {
-      fprintf(listing,
-              "Out of memory error at line %d\n",lineno);
+      t->nodeKind = VariableK;
+      t->attr._id = _id;
+      t->attr.array_expression = expression;
     }
-  else
-    {
-      for (i=0;i<MAXCHILDREN;i++) t->child[i] = NULL;
-      t->sibling = NULL;
-      t->nodekind = ExpK;
-      t->kind.exp = kind;
-      t->lineno = lineno;
-      t->type = Void;
-    }
+
   return t;
+}
+
+TreeNode*
+newCallNode(TreeNode *_id,
+            TreeNode *args) // nullable
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = CallK;
+      t->attr._id = _id;
+      t->attr.expression_list = args;
+    }
+
+  return t;
+}
+
+TreeNode *
+newConstantNode(char *NUM)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = ConstantK;
+      t->attr.NUM = atoi(NUM);
+    }
+
+  return t;
+}
+
+TreeNode *
+newTokenTypeNode(TokenType token)
+{
+  TreeNode * t = allocateTreeNode();
+  if (t != NULL)
+    {
+      t->nodeKind = TokenTypeK;
+      t->attr.token_type = token;
+    }
+
+  return t;
+
 }
 
 /* Function copyString allocates and makes a new
@@ -177,7 +479,8 @@ copyString(char * s)
   if (t==NULL)
     {
       fprintf(listing,
-              "Out of memory error at line %d\n",lineno);
+              "Out of memory error at line %d\n",
+              lineno);
     }
   else 
     {
@@ -203,68 +506,205 @@ printSpaces(void)
   for (i=0; i<indentno; i++) fprintf(listing," ");
 }
 
+/* operatorString returns string of operator */
+static const char *
+operatorString(TokenType op)
+{
+  if(op == INT) return "int";
+  if(op == VOID) return "void";
+
+  if(op == PLUS) return "+";
+  if(op == MINUS) return "-";
+  if(op == TIMES) return "*";
+  if(op == OVER) return "/";
+
+  if(op == LT) return "<";
+  if(op == LE) return "<=";
+  if(op == GT) return ">";
+  if(op == GE) return ">=";
+  if(op == EQ) return "==";
+  if(op == NE) return "!=";
+
+  return "";
+}
+
+#define PRINTDESC(...)\
+  do {\
+      printSpaces();\
+      fprintf(listing, __VA_ARGS__);\
+  } while(0);
+
 /* procedure printTree prints a syntax tree to the 
  * listing file using indentation to indicate subtrees
  */
 void
 printTree(TreeNode* tree)
 {
-  int i;
   INDENT;
-  while (tree != NULL)
+  if (tree == NULL) PRINTDESC("(null)");
+  for (; tree != NULL; tree = tree->sibling)
     {
-      printSpaces();
-      if (tree->nodekind==StmtK)
-      {
-        switch (tree->kind.stmt) 
-          {
-          case IfK:
-            fprintf(listing,"If\n");
-            break;
-          case RepeatK:
-            fprintf(listing,"Repeat\n");
-            break;
-          case AssignK:
-            fprintf(listing,
-                    "Assign to: %s\n",tree->attr.name);
-            break;
-          case ReadK:
-            fprintf(listing,
-                    "Read: %s\n",tree->attr.name);
-            break;
-          case WriteK:
-            fprintf(listing,"Write\n");
-            break;
-          default:
-            fprintf(listing,"Unknown ExpNode kind\n");
-            break;
-          }
-      }
-      else if (tree->nodekind==ExpK)
-      {
-        switch (tree->kind.exp)
-          {
-          case OpK:
-            fprintf(listing,"Op: ");
-            printToken(tree->attr.op,"\0");
-            break;
-          case ConstK:
-            fprintf(listing,
-                    "Const: %d\n",tree->attr.val);
-            break;
-          case IdK:
-            fprintf(listing,
-                    "Id: %s\n",tree->attr.name);
-            break;
-          default:
-            fprintf(listing,"Unknown ExpNode kind\n");
-            break;
-          }
-      }
-      else fprintf(listing,"Unknown node kind\n");
-      for (i=0;i<MAXCHILDREN;i++)
-           printTree(tree->child[i]);
-      tree = tree->sibling;
+      switch (tree->nodeKind)
+        {
+        case ErrorK:
+          PRINTDESC("[DEBUG] ErrorK at printTree\n");
+          break;
+
+        case VariableDeclarationK:
+          PRINTDESC("Variable Declaration\n");
+          printTree(tree->attr.type_specifier);
+          printTree(tree->attr._id);
+          break;
+
+        case ArrayDeclarationK:
+          PRINTDESC("Array Declaration\n");
+          printTree(tree->attr.type_specifier);
+          printTree(tree->attr._id);
+          printTree(tree->attr._num);
+          break;
+
+        case FunctionDeclarationK:
+          PRINTDESC("Function Declaration\n");
+          printTree(tree->attr.type_specifier);
+          printTree(tree->attr._id);
+          PRINTDESC("> Parameters :\n");
+          printTree(tree->attr.params);
+          PRINTDESC("> Function Block :\n");
+          printTree(tree->attr.compound_stmt);
+          break;
+
+        case VariableParameterK:
+          PRINTDESC("Parameter (Variable)\n");
+          printTree(tree->attr.type_specifier);
+          printTree(tree->attr._id);
+          break;
+
+        case ArrayParameterK:
+          PRINTDESC("Parameter (Array)\n");
+          printTree(tree->attr.type_specifier);
+          printTree(tree->attr._id);
+          break;
+
+        case CompoundStatementK:
+          PRINTDESC("Compound Statement\n");
+          PRINTDESC("> Local Declarations :\n");
+          printTree(tree->attr.local_declarations);
+          PRINTDESC("> Local Statements :\n");
+          printTree(tree->attr.statement_list);
+          break;
+
+        case ExpressionStatementK:
+          PRINTDESC("Expression Statement\n");
+          PRINTDESC("> Expression :\n");
+          printTree(tree->attr.expression);
+          break;
+
+        case SelectionStatementK:
+          PRINTDESC("Selection Statement\n");
+          PRINTDESC("> Expression inside if(*) :\n");
+          printTree(tree->attr.expression);
+          PRINTDESC("> Statements inside if clause :\n");
+          printTree(tree->attr.if_statement);
+          PRINTDESC("> Statements inside else clause :\n");
+          printTree(tree->attr.else_statement);
+          break;
+
+        case IterationStatementK:
+          PRINTDESC("Iteration Statement\n");
+          PRINTDESC("> Expression inside while(*) :\n");
+          printTree(tree->attr.expression);
+          PRINTDESC("> Statements inside while clause :\n");
+          printTree(tree->attr.loop_statement);
+          break;
+
+        case ReturnStatementK:
+          PRINTDESC("Return Statement\n");
+          PRINTDESC("> Returning expression :\n");
+          printTree(tree->attr.expression);
+          break;
+
+        case AssignExpressionK:
+          PRINTDESC("Assignment Expression\n");
+          PRINTDESC("> Variable associated to assignment :\n");
+          printTree(tree->attr.var);
+          PRINTDESC("> Value assigned :\n");
+          printTree(tree->attr.expression);
+          break;
+
+        case ComparisonExpressionK:
+          PRINTDESC("Comparison Expression\n");
+          printTree(tree->attr.operator_specifier);;
+          PRINTDESC("> Left expression compared :\n");
+          printTree(tree->attr.left_expression);
+          PRINTDESC("> Right expression compared :\n");
+          printTree(tree->attr.right_expression);
+          break;
+
+        case AdditiveExpressionK:
+          PRINTDESC("Additive Expression\n");
+          printTree(tree->attr.operator_specifier);;
+          PRINTDESC("> Left expression added / subtracted :\n");
+          printTree(tree->attr.left_expression);
+          PRINTDESC("> Right expression added / subtracted :\n");
+          printTree(tree->attr.right_expression);
+          break;
+
+        case MultiplicativeExpressionK:
+          PRINTDESC("Multiplicative Expression\n");
+          printTree(tree->attr.operator_specifier);;
+          PRINTDESC("> Left expression multiplied / divided :\n");
+          printTree(tree->attr.left_expression);
+          PRINTDESC("> Right expression multiplied / divided :\n");
+          printTree(tree->attr.right_expression);
+          break;
+
+        case VariableK:
+          PRINTDESC("Variable Id : %s", tree->attr.ID);
+          break;
+
+        case ArrayK:
+          PRINTDESC("Array\n");
+          printTree(tree->attr._id);
+          PRINTDESC("> Expression inside subscript [*]\n");
+          printTree(tree->attr.expression);
+          break;
+
+        case CallK:
+          PRINTDESC("Function Call\n");
+          printTree(tree->attr._id);
+          PRINTDESC("> Function arguments :\n");
+          printTree(tree->attr.expression_list);
+          break;
+
+        case ConstantK:
+          PRINTDESC("Constant : %d", tree->attr.NUM);
+          break;
+
+        case TokenTypeK:
+          PRINTDESC("Token : %s", operatorString(tree->attr.token_type));
+          break;
+
+        case ParameterRange:
+          PRINTDESC("[DEBUG] ParameterRange at printTree\n");
+          break;
+
+        case StatementRange:
+          PRINTDESC("[DEBUG] StatementRange at printTree\n");
+          break;
+
+        case ExpressionRange:
+          PRINTDESC("[DEBUG] ExpressionRange at printTree\n");
+          break;
+
+        case VariableRange:
+          PRINTDESC("[DEBUG] VariableRange at printTree\n");
+          break;
+
+        default:
+          PRINTDESC("[DEBUG] No such nodeKind\n");
+        }
     }
+  PRINTDESC("\n");
   UNINDENT;
 }
+
