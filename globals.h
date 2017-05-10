@@ -62,28 +62,119 @@ extern int lineno; /* source line number for listing */
 /***********   Syntax tree for parsing ************/
 /**************************************************/
 
-typedef enum {StmtK,ExpK} NodeKind;
-typedef enum {IfK,RepeatK,AssignK,ReadK,WriteK} StmtKind;
-typedef enum {OpK,ConstK,IdK} ExpKind;
+typedef enum {
+    ErrorK,
+
+    VariableDeclarationK,
+    ArrayDeclarationK,
+    FunctionDeclarationK,
+
+    VariableParameterK,
+    ArrayParameterK,
+
+    CompoundStatementK,
+    ExpressionStatementK,
+    SelectionStatementK,
+    IterationStatementK,
+    ReturnStatementK,
+
+    AssignExpressionK,
+    ComparisonExpressionK,
+    AdditiveExpressionK,
+    MultiplicativeExpressionK,
+
+    VariableK,
+    ArrayK,
+    CallK,
+
+    ConstantK,
+    TokenTypeK,
+
+    // Error codes
+    ParameterRange,
+    StatementRange,
+    ExpressionRange,
+    VariableRange,
+} NodeKind;
 
 /* ExpType is used for type checking */
 typedef enum {Void,Integer,Boolean} ExpType;
 
-#define MAXCHILDREN 3
-
 typedef struct treeNode
-   {
-     struct treeNode* child[MAXCHILDREN];
-     struct treeNode* sibling;
-     int lineno;
-     NodeKind nodekind;
-     union { StmtKind stmt; ExpKind exp;} kind;
-     union {
-             TokenType op;
-             int val;
-             char* name; } attr;
-     ExpType type; /* for type checking of exps */
-   } TreeNode;
+{
+  struct treeNode* sibling;
+  int lineno;
+  NodeKind nodeKind;
+  union {
+      // VariableDeclarationK
+      // ArrayDeclarationK
+      // FunctionDeclarationK
+      // VariableParameterK
+      // ArrayParameterK
+      // CallK
+      // ArrayK
+      struct {
+          struct treeNode *type_specifier;
+          struct treeNode *_id;
+          union {
+              struct treeNode *_num; // ArrayDeclarationK
+              struct { // FunctionDeclarationK
+                  struct treeNode *params;
+                  struct treeNode *compound_stmt;
+              };
+              struct treeNode *expression_list; // CallK
+              struct treeNode *array_expression; // ArrayK
+          };
+      };
+
+      // CompoundStatementK
+      struct {
+          struct treeNode *local_declarations;
+          struct treeNode *statement_list;
+      };
+
+      // ExpressionStatementK
+      // SelectionStatementK
+      // IterationStatementK
+      // ReturnStatementK
+      // AssignExpressionK
+      struct {
+          struct treeNode *expression;
+          union {
+              struct { // SelectionStatementK
+                  struct treeNode *if_statement;
+                  struct treeNode *else_statement;
+              };
+              struct treeNode *loop_statement; // IterationStatementK
+              struct treeNode *var; // AssignExpressionK
+          };
+      };
+
+      // ComparisonExpressionK
+      // AdditiveExpressionK
+      // MultiplicativeExpressionK
+      struct {
+          struct treeNode *left_expression;
+          struct treeNode *operator_specifier;
+          struct treeNode *right_expression;
+      };
+
+      // VariableK
+      struct {
+          char *ID;
+      };
+
+      // ConstantK
+      struct {
+          int NUM;
+      };
+
+      // TokenTypeK
+      struct {
+          TokenType token_type;
+      };
+  } attr;
+} TreeNode;
 
 /**************************************************/
 /***********   Flags for tracing       ************/
