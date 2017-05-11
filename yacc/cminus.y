@@ -17,6 +17,7 @@ static char * savedName; /* for use in assignments */
 static int savedLineNo;  /* ditto */
 static TreeNode * savedTree; /* stores syntax tree for later return */
 
+static int yyerror(char * message);
 static int yylex(void);
 %}
 
@@ -334,7 +335,7 @@ empty       : /* empty */ { $$ = NULL; }
             ;
 %%
 
-int yyerror(char * message)
+static int yyerror(char * message)
 { fprintf(listing,"Syntax error at line %d: %s\n",lineno,message);
   fprintf(listing,"Current token: ");
   printToken(yychar,tokenString);
