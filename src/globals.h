@@ -14,6 +14,11 @@
 #include <ctype.h>
 #include <string.h>
 
+#ifndef YYPARSER
+#include "./build/cm.h"
+#define ENDFILE 0
+#endif
+
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -25,16 +30,7 @@
 /* MAXRESERVED = the number of reserved words */
 #define MAXRESERVED 8
 
-typedef enum 
-   {
-      /* book-keeping tokens */
-      ENDFILE,ERROR,
-      /* multicharacter tokens */
-      ELSE, IF, INT, RETURN, VOID, WHILE,
-      ID, NUM,
-      /* special symbols */
-      LE_OP, GE_OP, EQ_OP, NE_OP,
-   } TokenType;
+typedef int TokenType;
 
 extern FILE* source; /* source code text file */
 extern FILE* listing; /* listing output text file */
@@ -46,24 +42,44 @@ extern int lineno; /* source line number for listing */
 /***********   Syntax tree for parsing ************/
 /**************************************************/
 
-typedef enum {StmtK,ExpK} NodeKind;
-typedef enum {IfK,RepeatK,AssignK,ReadK,WriteK} StmtKind;
-typedef enum {OpK,ConstK,IdK} ExpKind;
+typedef enum { StmtK,ExpK, DeclK, ParamK, TypeK } NodeKind;
+typedef enum { IfK, IterK, RetK, CompK } StmtKind;
+typedef enum { OpK, ConstK, IdK, ArrIdK, CallK, AssignK } ExpKind;
+typedef enum { FuncK, VarK, ArrK } DeclKind;
+typedef enum { ParamVarK, ParamArrK } ParamKind;
+typedef enum { TypeNameK } TypeKind;
 
 /* ExpType is used for type checking */
-typedef enum {Void,Integer,Boolean} ExpType;
+typedef enum { Void, Integer, Array } ExpType;
 
 #define MAXCHILDREN 3
 
+struct array_attr
+{
+  char* name;
+  int size;
+};
+
 typedef struct treeNode
-   { struct treeNode * child[MAXCHILDREN];
+   {
+     struct treeNode * child[MAXCHILDREN];
      struct treeNode * sibling;
      int lineno;
      NodeKind nodekind;
-     union { StmtKind stmt; ExpKind exp;} kind;
-     union { TokenType op;
-             int val;
-             char * name; } attr;
+     union {
+         StmtKind stmt;
+         ExpKind exp;
+         DeclKind decl;
+         ParamKind param;
+         TypeKind type;
+     } kind;
+     union { 
+         TokenType type;
+         TokenType op;
+         int val;
+         char * name;
+         struct array_attr arr_attr;
+     } attr;
      ExpType type; /* for type checking of exps */
    } TreeNode;
 

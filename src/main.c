@@ -8,7 +8,7 @@
 #include "globals.h"
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
-#define NO_PARSE TRUE
+#define NO_PARSE FALSE
 /* set NO_ANALYZE to TRUE to get a parser-only compiler */
 #define NO_ANALYZE TRUE
 
@@ -25,6 +25,7 @@
 #include "lex.h"
 #else
 #include "parse.h"
+#include "./build/cm.h"
 #if !NO_ANALYZE
 #include "analyze.h"
 #if !NO_CODE
@@ -40,9 +41,9 @@ FILE * listing;
 FILE * code;
 
 /* allocate and set tracing flags */
-int EchoSource = FALSE;
-int TraceScan = TRUE;
-int TraceParse = FALSE;
+int EchoSource = TRUE;
+int TraceScan = FALSE;
+int TraceParse = TRUE;
 int TraceAnalyze = FALSE;
 int TraceCode = FALSE;
 
