@@ -1,0 +1,9 @@
+void main (int arg)
+{
+  int a;
+  int c;
+  int b[15];
+  a = c + 12;
+  b[a] = 12;
+  b[a+c+1] = 12;
+}
