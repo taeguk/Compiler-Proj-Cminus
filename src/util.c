@@ -255,13 +255,13 @@ void printTree( TreeNode * tree )
           switch (tree->kind.stmt)
             {
             case IfK:
-              fprintf(listing, "If\n");
+              fprintf(listing, "If Statement\n");
               break;
             case IterK:
-              fprintf(listing, "While\n");
+              fprintf(listing, "While Statement\n");
               break;
             case RetK:
-              fprintf(listing, "Return\n");
+              fprintf(listing, "Return Statement\n");
               break;
             case CompK:
               fprintf(listing, "Compound Statement\n");
@@ -286,13 +286,15 @@ void printTree( TreeNode * tree )
               fprintf(listing, "Id: %s\n",tree->attr.name);
               break;
             case ArrIdK:
-              fprintf(listing, "Array Id\n");
+              fprintf(listing, "Array Id: %s\n", tree->attr.arr_attr.name);
+              printSpaces();
+              fprintf(listing, "Expression of Array %s\n", tree->attr.arr_attr.name);
               break;
             case CallK:
-              fprintf(listing, "CallK\n");
+              fprintf(listing, "Call Function\n");
               break;
             case AssignK:
-              fprintf(listing, "Assign to: %s\n", tree->attr.name);
+              fprintf(listing, "Assign to below Id\n");
               break;
             default:
               fprintf(listing,"Unknown ExpNode kind\n");
@@ -311,6 +313,8 @@ void printTree( TreeNode * tree )
                 break;
               case ArrK:
                 fprintf(listing, "Variable Array Declaration\n");
+                printSpaces();
+                fprintf(listing, "Array size: %d\n", tree->attr.arr_attr.size);
                 break;
               default:
                 fprintf(listing, "Unknown Declaration Node Kind\n");
@@ -326,7 +330,7 @@ void printTree( TreeNode * tree )
 //              fprintf(listing, "ParamVarK\n");
               break;
             case ParamArrK:
-              fprintf(listing, "ParamArrK\n");
+//              fprintf(listing, "ParamArrK\n");
               break;
             default:
               fprintf(listing, "Unknown Parameter Node Kind\n");

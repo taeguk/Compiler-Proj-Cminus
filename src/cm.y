@@ -18,16 +18,16 @@ static int saved_number; /* for use in assignments as a number */
 static int saved_line_no;  /* ditto */
 static TreeNode * saved_tree; /* stores syntax tree for later return */
 static int yylex(void); // added 11/2/11 to ensure no conflict with lex
+int yyerror(char * message);
 
 %}
 
-%token INT VOID
+%token ELSE IF INT VOID WHILE RETURN
 %token ID NUM
 %token LT_OP GT_OP LE_OP GE_OP EQ_OP NE_OP ASSIGN SEMI
 %token LPAREN RPAREN LBRACE RBRACE
-%token IF ELSE WHILE RETURN
 %token ERROR ENDFILE
-
+%right RPAREN ELSE
 %%
 /* 1 */
 program : declaration_list
@@ -73,15 +73,15 @@ number: NUM
       ;
 identifier: ID
           {
-//            $$ = new_exp_node(IdK);
-            saved_name = copy_string(token_string);
+            $$ = new_exp_node(IdK);
+            $$->attr.name = copy_string(token_string);
             saved_line_no = lineno;
           }
           ;
 
 
 /* 4 */
-var_declaration : type_specifier var SEMI
+var_declaration : type_specifier identifier SEMI
                 {
                   $$ = new_decl_node(VarK);
                   $$->child[0] = $1;
@@ -93,8 +93,8 @@ var_declaration : type_specifier var SEMI
                 {
                   $$ = new_decl_node(ArrK);
                   $$->child[0] = $1;
+                  $$->child[1] = $2;
                   $$->lineno = lineno;
-                  $$->attr.name = saved_name;
                   $$->attr.arr_attr.size = saved_number;
                 }
                ;
@@ -115,7 +115,7 @@ fun_declaration : type_specifier identifier
                     {
                       $$ = new_decl_node(FuncK);
                       $$->lineno = lineno;
-                      $$->attr.name = saved_name;
+                      $$->child[0] = $2;
                     }
                   LPAREN params RPAREN compound_stmt
                     {
@@ -161,13 +161,15 @@ param : type_specifier identifier
       {
         $$ = new_param_node(ParamVarK);
         $$->child[0] = $1; /* type */
-        $$->attr.name = saved_name; /* ID */
+        $$->child[1] = $2;
+//        $$->attr.name = saved_name; /* ID */
       }
       | type_specifier identifier '[' ']'
       {
         $$ = new_param_node(ParamArrK);
         $$->child[0] = $1; /* type */
-        $$->attr.name = saved_name; /* ID */
+        $$->child[1] = $2;
+//        $$->attr.name = saved_name; /* ID */
       }
      ;
 /* 10 */
@@ -235,7 +237,7 @@ statement : expression_stmt
               {
                 $$ = $1;
               }
-       | return_stmt
+        | return_stmt
               {
                 $$ = $1;
               }
@@ -266,7 +268,7 @@ selection_stmt: IF LPAREN expression RPAREN statement
                   }
               ;
 /* 16 */
-iteration_stmt: WHILE LPAREN expression RPAREN statement_list
+iteration_stmt: WHILE LPAREN expression RPAREN statement
                   {
                     $$ = new_stmt_node(IterK);
                     $$->child[0] = $3;
@@ -285,13 +287,14 @@ return_stmt: RETURN SEMI
               }
            ;
 /* 18 */
-expression: identifier ASSIGN expression
+expression: var ASSIGN expression
               {
                 $$ = new_exp_node(AssignK);
-                $$->attr.name = saved_name;
+//                $$->attr.name = saved_name;
 
-//                $$->child[0] = $1;
-                $$->child[0] = $3;
+                $$->child[0] = $1;
+                $$->child[1] = $3;
+//                $$->child[0] = $3;
               }
           | simple_expression
               {
@@ -301,14 +304,19 @@ expression: identifier ASSIGN expression
 /* 19 */
 var: identifier
       {
-        $$ = new_exp_node(IdK);
-        $$->attr.name = saved_name;
+//        $$ = new_exp_node(IdK);
+//        $$->attr.name = saved_name;
+        $$ = $1;
       }
    | identifier '[' expression ']'
       {
-        $$ = new_exp_node(ArrIdK);
-        $$->attr.arr_attr.name = saved_name;
-        $$->child[0] = $3;
+       $$ = new_exp_node(ArrIdK);
+//        $$->attr.arr_attr.name = saved_name;
+//        $$->child[0] = $3;
+//        $$->child[0] = $1;
+        $$->attr.arr_attr.name = $1->attr.name;
+        $$->child[1] = $3;
+        free($1);
       }
    ;
 /* 20 */
@@ -430,8 +438,8 @@ factor: LPAREN expression RPAREN
 call: identifier
         {
           $$ = new_exp_node(CallK);
-//          $$->child[0] = $1;
-          $$->attr.name = saved_name;
+          $$->attr.name = $1->attr.name;
+          free($1);
         }
       LPAREN args RPAREN
         {

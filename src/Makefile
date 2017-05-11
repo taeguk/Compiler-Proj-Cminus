@@ -18,7 +18,7 @@ build.lex: cm.l .mkdir.o
 build.core: $(addsuffix .o, $(TARGET))
 
 build.bison: build.lex $(BISON_Y)
-	bison -o $(BUILD_DIR)/$(BISON_Y_C) -d $(BISON_Y)
+	bison -o $(BUILD_DIR)/$(BISON_Y_C) -dv $(BISON_Y)
 
 
 include $(SRC_DIR)/rules.mk

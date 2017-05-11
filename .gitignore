@@ -3,3 +3,5 @@
 main
 lex.yy.c
 build/
+log
+20141570
