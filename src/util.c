@@ -291,7 +291,9 @@ void printTree( TreeNode * tree )
               fprintf(listing, "Expression of Array %s\n", tree->attr.arr_attr.name);
               break;
             case CallK:
-              fprintf(listing, "Call Function\n");
+              fprintf(listing, "Call Function : %s\n", tree->attr.name);
+              INDENT; printSpaces(); UNINDENT;
+              fprintf(listing, "%s's Argument\n", tree->attr.name);
               break;
             case AssignK:
               fprintf(listing, "Assign to below Id\n");

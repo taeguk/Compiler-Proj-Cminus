@@ -87,7 +87,6 @@ var_declaration : type_specifier identifier SEMI
                   $$->child[0] = $1;
                   $$->child[1] = $2;
                   $$->lineno = lineno;
-//                  $$->attr.name = saved_name;
                 }
                 | type_specifier identifier '[' number ']' SEMI
                 {
@@ -162,14 +161,12 @@ param : type_specifier identifier
         $$ = new_param_node(ParamVarK);
         $$->child[0] = $1; /* type */
         $$->child[1] = $2;
-//        $$->attr.name = saved_name; /* ID */
       }
       | type_specifier identifier '[' ']'
       {
         $$ = new_param_node(ParamArrK);
         $$->child[0] = $1; /* type */
         $$->child[1] = $2;
-//        $$->attr.name = saved_name; /* ID */
       }
      ;
 /* 10 */
@@ -184,7 +181,6 @@ compound_stmt: LBRACE local_declarations statement_list RBRACE
 local_declarations: local_declarations var_declaration
                       {
                         YYSTYPE t = $1;
-                        /* TODO: Check NULL */
                         if (t != NULL)
                         {
                           while (t->sibling)
@@ -204,7 +200,6 @@ local_declarations: local_declarations var_declaration
 statement_list: statement_list statement
                   {
                     YYSTYPE t = $1;
-                    // TODO : Check NULL 
                     if (t)
                     {
                       while (t->sibling)
@@ -290,11 +285,8 @@ return_stmt: RETURN SEMI
 expression: var ASSIGN expression
               {
                 $$ = new_exp_node(AssignK);
-//                $$->attr.name = saved_name;
-
                 $$->child[0] = $1;
                 $$->child[1] = $3;
-//                $$->child[0] = $3;
               }
           | simple_expression
               {
@@ -304,16 +296,11 @@ expression: var ASSIGN expression
 /* 19 */
 var: identifier
       {
-//        $$ = new_exp_node(IdK);
-//        $$->attr.name = saved_name;
         $$ = $1;
       }
    | identifier '[' expression ']'
       {
-       $$ = new_exp_node(ArrIdK);
-//        $$->attr.arr_attr.name = saved_name;
-//        $$->child[0] = $3;
-//        $$->child[0] = $1;
+        $$ = new_exp_node(ArrIdK);
         $$->attr.arr_attr.name = $1->attr.name;
         $$->child[1] = $3;
         free($1);
@@ -363,7 +350,6 @@ relop: LE_OP
           $$->attr.op = NE_OP;
         }
      ;
-/* TODO: left recursive */
 /* 22 */
 additive_expression: additive_expression addop term
                       {
@@ -376,9 +362,6 @@ additive_expression: additive_expression addop term
                         $$ = $1;
                       }
                    ;
-/* TODO: Operation type split
-single character Operation vs multiple character Operation
-*/
 /* 23 */
 addop: '+'
         {
