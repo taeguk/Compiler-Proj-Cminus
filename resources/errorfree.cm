@@ -14,7 +14,9 @@ int binarySearch(int x) {
     }
     return 0;
 }
-
+int foo(int x, int y) {
+    return 0;
+}
 int main(void) {
     int i;
     int goal;
@@ -26,6 +28,15 @@ int main(void) {
       }
     goal=100;
     res = binarySearch(goal);
+    goal = foo(i, res);
+    1<2; 1<=2;
+    2>1; 2>=1;
+
+
+    a+b; a-b;
+    a*b; a/b;
+    a=b;
+
     return 0;
 }
 
