@@ -9,6 +9,9 @@
 #ifndef _SYMTAB_H_
 #define _SYMTAB_H_
 
+int st_push_scope(void);
+int st_pop_scope(void);
+
 /* Procedure st_insert inserts line numbers and
  * memory locations into the symbol table
  * loc = memory location is inserted only the

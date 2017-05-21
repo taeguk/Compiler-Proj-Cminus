@@ -16,6 +16,10 @@
 /* SIZE is the size of the hash table */
 #define SIZE 211
 
+#define MAX_SCOPE_LEVEL 100
+
+#define VALID_HASH_ARRAY_SIZE (MAX_SCOPE_LEVEL * 200)
+
 /* SHIFT is the power of two used as multiplier
    in hash function  */
 #define SHIFT 4
@@ -50,10 +54,52 @@ typedef struct BucketListRec
      LineList lines;
      int memloc ; /* memory location for variable */
      struct BucketListRec * next;
+     int scope_level;
    } * BucketList;
 
 /* the hash table */
+
 static BucketList hashTable[SIZE];
+static int valid_hash_arr[VALID_HASH_ARRAY_SIZE];
+static int valid_hash_arr_base[MAX_SCOPE_LEVEL];  // scope level -> valid_hash_arr base index.
+static int valid_hash_arr_cnt;
+static int cur_scope_level = 0;
+
+int st_push_scope(void)
+{
+  if (cur_scope_level + 1 >= MAX_SCOPE_LEVEL)
+    return -1;
+
+  valid_hash_arr_base[++cur_scope_level] = valid_hash_arr_cnt;
+
+  return 0;
+}
+
+int st_pop_scope(void)
+{
+  if (cur_scope_level - 1 < 0)
+    return -1;
+  
+  for (int i = valid_hash_arr_base[cur_scope_level];
+       i < valid_hash_arr_cnt; ++i)
+    {
+      int h = valid_hash_arr[i];
+      BucketList l = hashTable[h];
+      
+      while ((l != NULL) && l->scope_level >= cur_scope_level)
+        {
+          struct BucketListRec *tmp = l;
+          l = l->next;
+
+          // TODO: print some infomations.
+          free(tmp);
+        }
+    }
+
+  valid_hash_arr_cnt = valid_hash_arr_base[cur_scope_level--];
+
+  return 0;
+}
 
 /* Procedure st_insert inserts line numbers and
  * memory locations into the symbol table
@@ -73,6 +119,8 @@ void st_insert( char * name, int lineno, int loc )
     l->memloc = loc;
     l->lines->next = NULL;
     l->next = hashTable[h];
+    l->scope_level = cur_scope_level;
+    valid_hash_arr[valid_hash_arr_cnt++] = h;
     hashTable[h] = l; }
   else /* found in table, so just add line number */
   { LineList t = l->lines;
