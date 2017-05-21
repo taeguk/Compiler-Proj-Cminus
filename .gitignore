@@ -1,0 +1,7 @@
+# output files
+*.o
+main
+lex.yy.c
+build/
+log
+20141570
