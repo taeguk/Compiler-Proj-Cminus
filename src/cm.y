@@ -7,11 +7,11 @@
 /****************************************************/
 %{
 #define YYPARSER /* distinguishes Yacc output from other code files */
-
-#include "globals.h"
-#include "util.h"
-#include "scan.h"
-#include "parse.h"
+/* because cm.tab.c is located in ./build/ directory */
+#include "../globals.h"
+#include "../util.h"
+#include "../scan.h"
+#include "../parse.h"
 
 #define YYSTYPE TreeNode *
 

@@ -11,9 +11,10 @@
 %option nounput
 
 %{
-#include "globals.h"
-#include "util.h"
-#include "scan.h"
+/* because cm.lex.c is located in ./build/ directory */
+#include "../globals.h"
+#include "../util.h"
+#include "../scan.h"
 /* lexeme of identifier or reserved word */
 char tokenString[MAXTOKENLEN+1];
 %}

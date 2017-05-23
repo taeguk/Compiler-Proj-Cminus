@@ -16,7 +16,7 @@
 #include <string.h>
 
 #ifndef YYPARSER
-#include "cm.tab.h"
+#include "build/cm.tab.h"
 #endif
 
 #ifndef FALSE
