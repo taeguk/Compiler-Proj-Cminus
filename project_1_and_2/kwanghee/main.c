@@ -1,6 +1,6 @@
 /****************************************************/
 /* File: main.c                                     */
-/* Main program for TINY compiler                   */
+/* Main program for C- compiler                     */
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
 /****************************************************/
@@ -22,7 +22,6 @@
 #include "scan.h"
 #else
 #include "parse.h"
-int yydebug = 0;
 #if !NO_ANALYZE
 #include "analyze.h"
 #if !NO_CODE
@@ -38,7 +37,7 @@ FILE * listing;
 FILE * code;
 
 /* allocate and set tracing flags */
-int EchoSource = FALSE;
+int EchoSource = TRUE;
 int TraceScan = FALSE;
 int TraceParse = TRUE;
 int TraceAnalyze = FALSE;
@@ -46,38 +45,48 @@ int TraceCode = FALSE;
 
 int Error = FALSE;
 
-int main( int argc, char * argv[] )
-{ TreeNode * syntaxTree;
+int
+main(int argc, char* argv[])
+{
+  TreeNode * syntaxTree;
   char pgm[120]; /* source code file name */
   if (argc != 2)
-    { fprintf(stderr,"usage: %s <filename>\n",argv[0]);
+    {
+      fprintf(stderr,"usage: %s <filename>\n",argv[0]);
       exit(1);
     }
   strcpy(pgm,argv[1]) ;
   if (strchr (pgm, '.') == NULL)
+    {
      strcat(pgm,".tny");
+    }
   source = fopen(pgm,"r");
   if (source==NULL)
-  { fprintf(stderr,"File %s not found\n",pgm);
+  {
+    fprintf(stderr,"File %s not found\n",pgm);
     exit(1);
   }
   listing = stdout; /* send listing to screen */
-  fprintf (listing,"\nC- COMPILATION: %s\n",pgm);
 #if NO_PARSE
-  fprintf (listing, "   line number\t\t%-20s\t%-20s     \n", "token", "lexeme");
-  fprintf (listing, "-----------------------------------------------------------\n");
-  TokenType tokenType;
-  while ((tokenType = getToken()) != ENDFILE)
-    ;//fprintf(listing,"%d %d %s\n", lineno, tokenType, tokenString);
+  if (TraceScan)
+    {
+      int divider_cnt = 80;
+      fprintf(listing,"\n\tline number\t\ttoken\t\t\tlexeme\n");
+      while(divider_cnt--) putchar('-');
+      putchar('\n');
+    }
+  while (getToken()!=ENDFILE);
 #else
   syntaxTree = parse();
-  if (TraceParse) {
-    fprintf(listing,"\nSyntax tree:\n");
-    printTree(syntaxTree);
-  }
+  if (TraceParse)
+    {
+      fprintf(listing,"\nSyntax tree:\n");
+      printTree(syntaxTree);
+    }
 #if !NO_ANALYZE
   if (! Error)
-  { if (TraceAnalyze) fprintf(listing,"\nBuilding Symbol Table...\n");
+  {
+    if (TraceAnalyze) fprintf(listing,"\nBuilding Symbol Table...\n");
     buildSymtab(syntaxTree);
     if (TraceAnalyze) fprintf(listing,"\nChecking Types...\n");
     typeCheck(syntaxTree);
@@ -85,14 +94,16 @@ int main( int argc, char * argv[] )
   }
 #if !NO_CODE
   if (! Error)
-  { char * codefile;
+  {
+    char * codefile;
     int fnlen = strcspn(pgm,".");
     codefile = (char *) calloc(fnlen+4, sizeof(char));
     strncpy(codefile,pgm,fnlen);
     strcat(codefile,".tm");
     code = fopen(codefile,"w");
     if (code == NULL)
-    { printf("Unable to open %s\n",codefile);
+    {
+      printf("Unable to open %s\n",codefile);
       exit(1);
     }
     codeGen(syntaxTree,codefile);
