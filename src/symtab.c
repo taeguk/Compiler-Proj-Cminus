@@ -50,11 +50,14 @@ typedef struct LineListRec
  * it appears in the source code
  */
 typedef struct BucketListRec
-   { char * name;
+   {
+     char * name;
      LineList lines;
-     int memloc ; /* memory location for variable */
-     struct BucketListRec * next;
+     TreeNode *tree_node;
      int scope_level;
+     int memloc; /* memory location for variable */
+     
+     struct BucketListRec * next;
    } * BucketList;
 
 /* the hash table */
@@ -143,28 +146,141 @@ int st_lookup ( char * name )
   else return l->memloc;
 }
 
+typedef enum { VAR, PAR, FUNC } ID_TYPE;
+typedef enum { VOID, INT, ARRAY } DATA_TYPE;
+
+DATA_TYPE 
+set_data_type (TokenType op)
+{
+  switch (op)
+    {
+    case INT:
+      return INT;
+      break;
+    case VOID:
+      return VOID;
+      break;
+    default:
+      data_type = -1;
+      break;
+    }
+}
+
 /* Procedure printSymTab prints a formatted 
  * listing of the symbol table contents 
  * to the listing file
  */
 void printSymTab(FILE * listing)
-{ int i;
-  fprintf(listing,"Variable Name  Location   Line Numbers\n");
-  fprintf(listing,"-------------  --------   ------------\n");
+{
+  int i;
+  fprintf(listing,
+          "Name\tScope\tLoc\tV/P/F\tArray?\tArrSize\tType\tLine Numbers\n"
+          "--------------------------------------------------------------------\n");
+
   for (i=0;i<SIZE;++i)
-  { if (hashTable[i] != NULL)
-    { BucketList l = hashTable[i];
-      while (l != NULL)
-      { LineList t = l->lines;
-        fprintf(listing,"%-14s ",l->name);
-        fprintf(listing,"%-8d  ",l->memloc);
-        while (t != NULL)
-        { fprintf(listing,"%4d ",t->lineno);
-          t = t->next;
+    {
+      if (hashTable[i] != NULL)
+        {
+          BucketList l = hashTable[i];
+          TreeNode *node = l->tree_node;
+
+
+          while (l != NULL)
+            {
+              int is_arr, size_arr = 0;
+              ID_TYPE id_type; /* (Var,Par,Func) (0,1,2) */
+              DATA_TYPE data_type; /* (void, int, array) (0,1,2) */
+
+              switch (node->nodeKind)
+                {
+                  /* Declaration */
+                  case VariableDeclarationK:
+                    is_arr = FALSE;
+                    id_type = VAR;
+                    data_type = set_data_type(node->attr.varDecl.type_spec->attr.TOK);
+                    break; /* VariableDeclarationK */
+
+                  case ArrayDeclarationK:
+                    is_arr = TRUE;
+                    id_type = VAR;
+                    size_arr = node->attr.arrDecl._num->attr.NUM;
+                    data_type = ARRAY;
+                    break; /* ArrayDeclarationK */
+
+                  case FunctionDeclarationK:
+                    is_arr = FALSE;
+                    id_type = FUNC;
+                    data_type = set_data_type(node->attr.funcDecl.type_spec->attr.TOK);
+                    break; /* FunctionDeclarationK */
+
+                  /* Parameter */
+                  case VariableParameterK:
+                    is_arr = FALSE;
+                    id_type = PAR;
+                    data_type = set_data_type(node->attr.varParam.type_spec->attr.TOK);
+                    break; /* VariableParameterK */
+
+                  case ArrayParameterK:
+                    is_arr = TRUE;
+                    id_type = PAR;
+                    size_arr = 0;
+                    data_type = ARRAY;
+                    break;
+                }
+
+              /* print name */
+              fprintf(listing, "%-14s ", l->name);
+
+              /* print scope */
+              fprintf(listing, "%-4d", l->scope_level);
+
+              /* print Memory Location */
+              fprintf(listing, "%-8d  ", l->memloc);
+
+              /* print ID Type, V/P/F = 0,1,2 */
+              switch (id_type)
+                {
+                  case VAR: /* variable */
+                    fprintf(listing, "%-5s", "Var");
+                    break;
+                  case PAR: /* Parameter */
+                    fprintf(listing, "%-5s", "Par");
+                    break;
+                  case FUNC: /* Function */
+                    fprintf(listing, "%-5s", "Func");
+                    break;
+                }
+
+              /* is_arr with Array size if it is array */
+              if (is_arr)
+                fprintf(listing, "%-8s %-8d", "Array", size_arr);
+              else
+                fprintf(listing, "%-8s %c", "No", '-');
+              
+              /* data type of ID: void, int, array(0, 1, 2) */
+              switch (data_type)
+                {
+                case VOID:
+                  fprintf(listing, "%-8s", "void");
+                  break;
+                case INT:
+                  fprintf(listing, "%-8s", "int");
+                  break;
+                case ARRAY:
+                  fprintf(listing, "%-8s", "array");
+                  break;
+                }
+
+              /* line numbers */
+              LineList t = l->lines;
+              while (t != NULL)
+                {
+                  fprintf(listing,"%4d ",t->lineno);
+                  t = t->next;
+                }
+              fprintf(listing,"\n");
+              l = l->next;
+            }
         }
-        fprintf(listing,"\n");
-        l = l->next;
-      }
     }
-  }
 } /* printSymTab */

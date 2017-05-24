@@ -9,6 +9,8 @@
 #ifndef _SYMTAB_H_
 #define _SYMTAB_H_
 
+#include "globals.h"
+
 int st_push_scope(void);
 int st_pop_scope(void);
 
