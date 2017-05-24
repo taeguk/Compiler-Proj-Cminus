@@ -94,64 +94,111 @@ typedef enum {
 /* ExpType is used for type checking */
 typedef enum {Void,Integer,Boolean} ExpType;
 
-typedef struct treeNode
-{
-  struct treeNode* sibling;
+typedef struct treeNode {
+  struct treeNode *sibling;
   int lineno;
   NodeKind nodeKind;
   union {
       // VariableDeclarationK
-      // ArrayDeclarationK
-      // FunctionDeclarationK
-      // VariableParameterK
-      // ArrayParameterK
-      // CallK
-      // ArrayK
       struct {
-          struct treeNode *type_specifier;
+          struct treeNode *type_spec;
           struct treeNode *_id;
-          union {
-              struct treeNode *_num; // ArrayDeclarationK
-              struct { // FunctionDeclarationK
-                  struct treeNode *params;
-                  struct treeNode *compound_stmt;
-              };
-              struct treeNode *expression_list; // CallK
-              struct treeNode *array_expression; // ArrayK
-          };
-      };
+      } varDecl;
 
+      // ArrayDeclarationK
+      struct {
+          struct treeNode *type_spec;
+          struct treeNode *_id;
+          struct treeNode *_num;
+      } arrDecl;
+
+      // FunctionDeclarationK
+      struct {
+          struct treeNode *type_spec;
+          struct treeNode *_id;
+          struct treeNode *params;
+          struct treeNode *compound_stmt;
+      } funcDecl;
+
+      // VariableParameterK
+      struct {
+          struct treeNode *type_spec;
+          struct treeNode *_id;
+      } varParam;
+
+      // ArrayParameterK
+      struct {
+          struct treeNode *type_spec;
+          struct treeNode *_id;
+      } arrParam;
+      
       // CompoundStatementK
       struct {
-          struct treeNode *local_declarations;
-          struct treeNode *statement_list;
-      };
+          struct treeNode *local_decl;
+          struct treeNode *stmt_list;
+      } compoundStmt;
 
       // ExpressionStatementK
+      struct {
+          struct treeNode *expr;
+      } exprStmt;
+
       // SelectionStatementK
+      struct {
+          struct treeNode *expr;
+          struct treeNode *if_stmt;
+          struct treeNode *else_stmt;
+      } selectStmt;
+
       // IterationStatementK
+      struct {
+          struct treeNode *expr;
+          struct treeNode *loop_stmt;
+      } iterStmt;
+
       // ReturnStatementK
+      struct {
+          struct treeNode *expr;
+      } retStmt;
+
       // AssignExpressionK
       struct {
-          struct treeNode *expression;
-          union {
-              struct { // SelectionStatementK
-                  struct treeNode *if_statement;
-                  struct treeNode *else_statement;
-              };
-              struct treeNode *loop_statement; // IterationStatementK
-              struct treeNode *var; // AssignExpressionK
-          };
-      };
+          struct treeNode *expr;
+          struct treeNode *_var;
+      } assignStmt;
 
       // ComparisonExpressionK
+      struct {
+          struct treeNode *lexpr;
+          struct treeNode *op;
+          struct treeNode *rexpr;
+      } compareExpr;
+
       // AdditiveExpressionK
+      struct {
+          struct treeNode *lexpr;
+          struct treeNode *op;
+          struct treeNode *rexpr;
+      } addExpr;
+
       // MultiplicativeExpressionK
       struct {
-          struct treeNode *left_expression;
-          struct treeNode *operator_specifier;
-          struct treeNode *right_expression;
-      };
+          struct treeNode *lexpr;
+          struct treeNode *op;
+          struct treeNode *rexpr;
+      } multExpr;
+
+      // ArrayK
+      struct {
+          struct treeNode *_id;
+          struct treeNode *arr_expr;
+      } arr;
+
+      // CallK
+      struct {
+          struct treeNode *_id;
+          struct treeNode *expr_list;
+      } call;
 
       // VariableK
       struct {
@@ -165,7 +212,7 @@ typedef struct treeNode
 
       // TokenTypeK
       struct {
-          TokenType token_type;
+          TokenType TOK;
       };
   } attr;
 } TreeNode;
