@@ -117,7 +117,7 @@ typedef struct treeNode {
           struct treeNode *type_spec;
           struct treeNode *_id;
           struct treeNode *params;
-          struct treeNode *compound_stmt;
+          struct treeNode *cmpd_stmt;
       } funcDecl;
 
       // VariableParameterK
@@ -136,7 +136,7 @@ typedef struct treeNode {
       struct {
           struct treeNode *local_decl;
           struct treeNode *stmt_list;
-      } compoundStmt;
+      } cmpdStmt;
 
       // ExpressionStatementK
       struct {
@@ -172,7 +172,7 @@ typedef struct treeNode {
           struct treeNode *lexpr;
           struct treeNode *op;
           struct treeNode *rexpr;
-      } compareExpr;
+      } cmpExpr;
 
       // AdditiveExpressionK
       struct {

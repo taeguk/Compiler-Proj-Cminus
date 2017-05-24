@@ -224,7 +224,7 @@ newFunctionDeclarationNode(TreeNode *type_specifier,
       t->attr.funcDecl.type_spec = type_specifier;
       t->attr.funcDecl._id = _id;
       t->attr.funcDecl.params = params;
-      t->attr.funcDecl.compound_stmt = compound_stmt;
+      t->attr.funcDecl.cmpd_stmt = compound_stmt;
     }
 
   return t;
@@ -268,8 +268,8 @@ newCompoundStatementNode(TreeNode *local_declarations, // nullable
   if (t != NULL)
     {
       t->nodeKind = CompoundStatementK;
-      t->attr.compoundStmt.local_decl = local_declarations;
-      t->attr.compoundStmt.stmt_list = statement_list;
+      t->attr.cmpdStmt.local_decl = local_declarations;
+      t->attr.cmpdStmt.stmt_list = statement_list;
     }
 
   return t;
@@ -357,9 +357,9 @@ newComparisonExpressionNode(TreeNode *left_expression,
   if (t != NULL)
     {
       t->nodeKind = ComparisonExpressionK;
-      t->attr.compareExpr.lexpr = left_expression;
-      t->attr.compareExpr.op = relop;
-      t->attr.compareExpr.rexpr = right_expression;
+      t->attr.cmpExpr.lexpr = left_expression;
+      t->attr.cmpExpr.op = relop;
+      t->attr.cmpExpr.rexpr = right_expression;
     }
 
   return t;
@@ -573,7 +573,7 @@ printTree(TreeNode* tree)
           PRINTDESC("> Parameters :\n");
           printTree(tree->attr.funcDecl.params);
           PRINTDESC("> Function Block :\n");
-          printTree(tree->attr.funcDecl.compound_stmt);
+          printTree(tree->attr.funcDecl.cmpd_stmt);
           break;
 
         case VariableParameterK:
@@ -591,9 +591,9 @@ printTree(TreeNode* tree)
         case CompoundStatementK:
           PRINTDESC("Compound Statement\n");
           PRINTDESC("> Local Declarations :\n");
-          printTree(tree->attr.compoundStmt.local_decl);
+          printTree(tree->attr.cmpdStmt.local_decl);
           PRINTDESC("> Local Statements :\n");
-          printTree(tree->attr.compoundStmt.stmt_list);
+          printTree(tree->attr.cmpdStmt.stmt_list);
           break;
 
         case ExpressionStatementK:
@@ -636,11 +636,11 @@ printTree(TreeNode* tree)
 
         case ComparisonExpressionK:
           PRINTDESC("Comparison Expression\n");
-          printTree(tree->attr.compareExpr.op);
+          printTree(tree->attr.cmpExpr.op);
           PRINTDESC("> Left expression compared :\n");
-          printTree(tree->attr.compareExpr.lexpr);
+          printTree(tree->attr.cmpExpr.lexpr);
           PRINTDESC("> Right expression compared :\n");
-          printTree(tree->attr.compareExpr.rexpr);
+          printTree(tree->attr.cmpExpr.rexpr);
           break;
 
         case AdditiveExpressionK:
