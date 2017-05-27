@@ -9,6 +9,7 @@
 #include "globals.h"
 #include "symtab.h"
 #include "analyze.h"
+#include "symtab.h"
 
 /* counter for variable memory locations */
 static int location = 0;
@@ -18,6 +19,7 @@ static int location = 0;
  * it applies preProc in preorder and postProc 
  * in postorder to tree pointed to by t
  */
+/*
 static void traverse( TreeNode * t,
                void (* preProc) (TreeNode *),
                void (* postProc) (TreeNode *) )
@@ -31,7 +33,7 @@ static void traverse( TreeNode * t,
     traverse(t->sibling,preProc,postProc);
   }
 }
-
+*/
 /* nullProc is a do-nothing procedure to 
  * generate preorder-only or postorder-only
  * traversals from traverse
@@ -45,53 +47,148 @@ static void nullProc(TreeNode * t)
  * identifiers stored in t into 
  * the symbol table 
  */
-static void insertNode( TreeNode * t)
-{ switch (t->nodekind)
-  { case StmtK:
-      switch (t->kind.stmt)
-      { case AssignK:
-        case ReadK:
-          if (st_lookup(t->attr.name) == -1)
-          /* not yet in table, so treat as new definition */
-            st_insert(t->attr.name,t->lineno,location++);
+
+#define NewID 1 // <-> ExistId
+#define AlreadyPushedScope 2
+
+static void insertNode( TreeNode * t, int flags)
+{ 
+  /*
+  if (t == NULL)
+    {
+      printf("[Debug in insertNode] t == NULL!!!\n");
+      return;
+    }
+  */
+  for (; t; t = t->sibling)
+    {
+      switch (t->nodeKind)
+        {
+          /* Declaration Kinds */
+        case VariableDeclarationK:
+          insertNode(t->attr.varDecl._id, NewID);
+          break;
+        case ArrayDeclarationK:
+          insertNode(t->attr.arrDecl._id, NewID);
+          break;
+        case FunctionDeclarationK:
+          insertNode(t->attr.funcDecl._id, NewID);
+          st_push_scope();
+          insertNode(t->attr.funcDecl.params, 0);
+          insertNode(t->attr.funcDecl.cmpd_stmt, AlreadyPushedScope);
+          break;
+
+          /* Parameter Kinds */
+        case VariableParameterK:
+          insertNode(t->attr.varParam._id, NewID);
+          break;
+        case ArrayParameterK:
+          insertNode(t->attr.arrParam._id, NewID);
+          break;
+
+          /* Statement Kinds */
+        case CompoundStatementK:
+          if (!(flags & AlreadyPushedScope))
+            st_push_scope();
+          insertNode(t->attr.cmpdStmt.local_decl, 0);
+          insertNode(t->attr.cmpdStmt.stmt_list, 0);
+          printSymTab(listing);
+          st_pop_scope();
+          break;
+        case ExpressionStatementK:
+          insertNode(t->attr.exprStmt.expr, 0);
+          break;
+        case SelectionStatementK:
+          insertNode(t->attr.selectStmt.expr, 0);
+          insertNode(t->attr.selectStmt.if_stmt, 0);
+          insertNode(t->attr.selectStmt.else_stmt, 0);
+          break;
+        case IterationStatementK:
+          insertNode(t->attr.iterStmt.expr, 0);
+          insertNode(t->attr.iterStmt.loop_stmt, 0);
+          break;
+        case ReturnStatementK:
+          insertNode(t->attr.retStmt.expr, 0);
+          break;
+
+          /* Expression Kinds */
+        case AssignExpressionK:
+          insertNode(t->attr.assignStmt.expr, 0);
+          insertNode(t->attr.assignStmt._var, 0);
+          break;
+        case ComparisonExpressionK:
+          insertNode(t->attr.cmpExpr.lexpr, 0);
+          insertNode(t->attr.cmpExpr.op, 0);
+          insertNode(t->attr.cmpExpr.rexpr, 0);
+          break;
+        case AdditiveExpressionK:
+          insertNode(t->attr.addExpr.lexpr, 0);
+          insertNode(t->attr.addExpr.op, 0);
+          insertNode(t->attr.addExpr.rexpr, 0);
+          break;
+        case MultiplicativeExpressionK:
+          insertNode(t->attr.multExpr.lexpr, 0);
+          insertNode(t->attr.multExpr.op, 0);
+          insertNode(t->attr.multExpr.rexpr, 0);
+          break;
+
+          /* Array Subscription and Function Invoke */
+        case ArrayK:
+          insertNode(t->attr.arr._id, 0);
+          insertNode(t->attr.arr.arr_expr, 0);
+          break;
+        case CallK:
+          insertNode(t->attr.call._id, 0);
+          insertNode(t->attr.call.expr_list, 0);
+          break;
+
+          /* Leaf Nodes */
+        case VariableK:
+          if (flags & NewID)
+            {
+              if (st_lookup(t->attr.ID) == -1)
+                /* not yet in table, so treat as new definition */
+                st_insert(t->attr.ID, t->lineno, t, 0 /* TODO: in project 4 */);
+              else
+                /* TODO: ERROR!!!!! */;
+            }
           else
-          /* already in table, so ignore location, 
-             add line number of use only */ 
-            st_insert(t->attr.name,t->lineno,0);
+            {
+              if (st_lookup(t->attr.ID) == -1)
+                /* TODO: ERROR!!!!! */;
+              else
+                /* already in table, so ignore location, 
+                 * add line number of use only */ 
+                st_insert(t->attr.ID, t->lineno, t, 0);
+            }
           break;
+        case ConstantK:
+          /* nothing to do */
+          break;
+
+          /* what is it? TODO: plz review this, @juice500ml */
+        case TokenTypeK:
+        case ErrorK:
         default:
-          break;
-      }
-      break;
-    case ExpK:
-      switch (t->kind.exp)
-      { case IdK:
-          if (st_lookup(t->attr.name) == -1)
-          /* not yet in table, so treat as new definition */
-            st_insert(t->attr.name,t->lineno,location++);
-          else
-          /* already in table, so ignore location, 
-             add line number of use only */ 
-            st_insert(t->attr.name,t->lineno,0);
-          break;
-        default:
-          break;
-      }
-      break;
-    default:
-      break;
-  }
+          /* TODO: ERROR!! */
+          ;
+        }
+    }
 }
 
 /* Function buildSymtab constructs the symbol 
  * table by preorder traversal of the syntax tree
  */
 void buildSymtab(TreeNode * syntaxTree)
-{ traverse(syntaxTree,insertNode,nullProc);
+{ //traverse(syntaxTree,insertNode,nullProc);
+  insertNode(syntaxTree, 0);
+  printSymTab(listing);
+  /*
   if (TraceAnalyze)
   { fprintf(listing,"\nSymbol table:\n\n");
     printSymTab(listing);
   }
+  */
 }
 
 static void typeError(TreeNode * t, char * message)
@@ -102,6 +199,7 @@ static void typeError(TreeNode * t, char * message)
 /* Procedure checkNode performs
  * type checking at a single tree node
  */
+/*
 static void checkNode(TreeNode * t)
 { switch (t->nodekind)
   { case ExpK:
@@ -150,10 +248,10 @@ static void checkNode(TreeNode * t)
 
   }
 }
-
+*/
 /* Procedure typeCheck performs type checking 
  * by a postorder syntax tree traversal
  */
 void typeCheck(TreeNode * syntaxTree)
-{ traverse(syntaxTree,nullProc,checkNode);
+{ //traverse(syntaxTree,nullProc,checkNode);
 }
