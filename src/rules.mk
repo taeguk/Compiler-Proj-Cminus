@@ -8,7 +8,7 @@ clean:
 	@echo "Cleaned."
 
 $(addsuffix .o, $(TARGET)): %.o: %.c %.h .mkdir.o
-	gcc -c $(basename $@).c -o $(OBJS_DIR)/$(notdir $(basename $@)).o
+	gcc -c $(CC_FLAGS) $(basename $@).c -o $(OBJS_DIR)/$(notdir $(basename $@)).o
 
 .PHONY: .mkdir.o
 .mkdir.o:
