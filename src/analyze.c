@@ -165,8 +165,9 @@ static void insertNode( TreeNode * t, int flags)
           break;
 
           /* Leaf Nodes */
+          /* Cannot be reached here!! */
         case VariableK:
-          /* Cannot be reach here!! */
+          /* nothing to do */
           break;
         case ConstantK:
           /* nothing to do */
@@ -175,6 +176,7 @@ static void insertNode( TreeNode * t, int flags)
           /* nothing to do */
           break;
         case ErrorK:
+          /* TODO: ERROR!! */
         default:
           /* TODO: ERROR!! */
           ;
