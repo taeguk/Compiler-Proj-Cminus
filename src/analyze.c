@@ -165,9 +165,9 @@ static void insertNode( TreeNode * t, int flags)
         case ConstantK:
           /* nothing to do */
           break;
-
-          /* what is it? TODO: plz review this, @juice500ml */
         case TokenTypeK:
+          /* nothing to do */
+          break;
         case ErrorK:
         default:
           /* TODO: ERROR!! */
