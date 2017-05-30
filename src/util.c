@@ -406,7 +406,7 @@ newArrayNode(TreeNode *_id,
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
-      t->nodeKind = VariableK;
+      t->nodeKind = ArrayK;
       t->attr.arr._id = _id;
       t->attr.arr.arr_expr = expression;
     }
