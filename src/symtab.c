@@ -157,10 +157,10 @@ set_data_type (TokenType op)
 {
   switch (op)
     {
-    case DT_INT:
+    case INT:
       return DT_INT;
       break;
-    case DT_VOID:
+    case VOID:
       return DT_VOID;
       break;
     default:
@@ -193,9 +193,9 @@ void printSymTab(FILE * listing)
             continue;
 
           int is_arr, size_arr = 0;
-          ID_TYPE id_type; /* (Var,Par,Func) (0,1,2) */
+          ID_TYPE id_type = -1; /* (Var,Par,Func) (0,1,2) */
           DATA_TYPE data_type; /* (void, int, array) (0,1,2) */
-
+          
           switch (node->nodeKind)
             {
               /* Declaration */
@@ -231,48 +231,56 @@ void printSymTab(FILE * listing)
               size_arr = 0;
               data_type = DT_ARRAY;
               break;
+            default:
+              fprintf(listing, "No nodeKind, %d\n", node->nodeKind);
             }
 
           /* print name */
-          fprintf(listing, "%-14s ", l->name);
+          fprintf(listing, "%-7s ", l->name);
 
           /* print scope */
-          fprintf(listing, "%-4d", l->scope_level);
+          fprintf(listing, "%-8d", l->scope_level);
 
           /* print Memory Location */
-          fprintf(listing, "%-8d  ", l->memloc);
+          fprintf(listing, "%-6d  ", l->memloc);
 
           /* print ID Type, V/P/F = 0,1,2 */
           switch (id_type)
             {
             case VAR: /* variable */
-              fprintf(listing, "%-5s", "Var");
+              fprintf(listing, "%-8s", "Var");
               break;
             case PAR: /* Parameter */
-              fprintf(listing, "%-5s", "Par");
+              fprintf(listing, "%-8s", "Par");
               break;
             case FUNC: /* Function */
-              fprintf(listing, "%-5s", "Func");
+              fprintf(listing, "%-8s", "Func");
+              break;
+            default:
+              fprintf(listing, "No id_type, %-8d", id_type);
               break;
             }
 
           /* is_arr with Array size if it is array */
           if (is_arr)
-            fprintf(listing, "%-8s %-8d", "Array", size_arr);
+            fprintf(listing, "%-8s%-8d", "Array", size_arr);
           else
-            fprintf(listing, "%-8s %c", "No", '-');
+            fprintf(listing, "%-8s%-8c", "No", '-');
 
           /* data type of ID: void, int, array(0, 1, 2) */
           switch (data_type)
             {
             case DT_VOID:
-              fprintf(listing, "%-8s", "void");
+              fprintf(listing, "%-5s", "void");
               break;
             case DT_INT:
-              fprintf(listing, "%-8s", "int");
+              fprintf(listing, "%-5s", "int");
               break;
             case DT_ARRAY:
-              fprintf(listing, "%-8s", "array");
+              fprintf(listing, "%-5s", "array");
+              break;
+            case DT_INVALID:
+              fprintf(listing, "%-5s", "Invalid");
               break;
             }
 
@@ -280,10 +288,11 @@ void printSymTab(FILE * listing)
           LineList t = l->lines;
           while (t != NULL)
             {
-              fprintf(listing,"%4d ",t->lineno);
+              fprintf(listing,"%8d",t->lineno);
               t = t->next;
             }
-          fprintf(listing,"\n");
+          fprintf(listing, "\n");
         }
     }
+  fprintf(listing, "\n");
 } /* printSymTab */
