@@ -155,6 +155,11 @@ static void insertNode( TreeNode * t, int flags)
           break;
 
           /* Array Subscription and Function Invoke */
+        case VariableK:
+          registerSymbol(t, t, 0);
+          insertNode(t->attr.arr.arr_expr, 0);
+          break;
+
         case ArrayK:
           registerSymbol(t, t->attr.arr._id, 0);
           insertNode(t->attr.arr.arr_expr, 0);
@@ -166,9 +171,6 @@ static void insertNode( TreeNode * t, int flags)
 
           /* Leaf Nodes */
           /* Cannot be reached here!! */
-        case VariableK:
-          /* nothing to do */
-          break;
         case ConstantK:
           /* nothing to do */
           break;
