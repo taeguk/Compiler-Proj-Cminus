@@ -83,8 +83,9 @@ int st_pop_scope(void)
 {
   if (cur_scope_level - 1 < 0)
     return -1;
-  
-  for (int i = valid_hash_arr_base[cur_scope_level];
+
+  int i;
+  for (i = valid_hash_arr_base[cur_scope_level];
        i < valid_hash_arr_cnt; ++i)
     {
       int h = valid_hash_arr[i];
