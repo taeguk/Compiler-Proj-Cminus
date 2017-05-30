@@ -51,6 +51,28 @@ static void nullProc(TreeNode * t)
 #define NewID 1 // <-> ExistId
 #define AlreadyPushedScope 2
 
+static void registerSymbol(TreeNode *reg_node, TreeNode *idNode, int flags)
+{
+  if (flags & NewID)
+    {
+      if (st_lookup(idNode->attr.ID) == -1)
+        /* not yet in table, so treat as new definition */
+        st_insert(idNode->attr.ID, idNode->lineno, reg_node, 0 /* TODO: in project 4 */);
+      else
+        /* TODO: ERROR!!!!! */;
+    }
+  else
+    {
+      if (st_lookup(idNode->attr.ID) == -1)
+        /* TODO: ERROR!!!!! */;
+      else
+        /* already in table, so ignore location, 
+         * add line number of use only */ 
+        st_insert(idNode->attr.ID, idNode->lineno, NULL, 0);
+    }
+
+}
+
 static void insertNode( TreeNode * t, int flags)
 { 
   /*
@@ -66,13 +88,13 @@ static void insertNode( TreeNode * t, int flags)
         {
           /* Declaration Kinds */
         case VariableDeclarationK:
-          insertNode(t->attr.varDecl._id, NewID);
+          registerSymbol(t, t->attr.varDecl._id, NewID);
           break;
         case ArrayDeclarationK:
-          insertNode(t->attr.arrDecl._id, NewID);
+          registerSymbol(t, t->attr.arrDecl._id, NewID);
           break;
         case FunctionDeclarationK:
-          insertNode(t->attr.funcDecl._id, NewID);
+          registerSymbol(t, t->attr.funcDecl._id, NewID);
           st_push_scope();
           insertNode(t->attr.funcDecl.params, 0);
           insertNode(t->attr.funcDecl.cmpd_stmt, AlreadyPushedScope);
@@ -80,10 +102,10 @@ static void insertNode( TreeNode * t, int flags)
 
           /* Parameter Kinds */
         case VariableParameterK:
-          insertNode(t->attr.varParam._id, NewID);
+          registerSymbol(t, t->attr.varParam._id, NewID);
           break;
         case ArrayParameterK:
-          insertNode(t->attr.arrParam._id, NewID);
+          registerSymbol(t, t->attr.arrParam._id, NewID);
           break;
 
           /* Statement Kinds */
@@ -134,33 +156,17 @@ static void insertNode( TreeNode * t, int flags)
 
           /* Array Subscription and Function Invoke */
         case ArrayK:
-          insertNode(t->attr.arr._id, 0);
+          registerSymbol(t, t->attr.arr._id, 0);
           insertNode(t->attr.arr.arr_expr, 0);
           break;
         case CallK:
-          insertNode(t->attr.call._id, 0);
+          registerSymbol(t, t->attr.call._id, 0);
           insertNode(t->attr.call.expr_list, 0);
           break;
 
           /* Leaf Nodes */
         case VariableK:
-          if (flags & NewID)
-            {
-              if (st_lookup(t->attr.ID) == -1)
-                /* not yet in table, so treat as new definition */
-                st_insert(t->attr.ID, t->lineno, t, 0 /* TODO: in project 4 */);
-              else
-                /* TODO: ERROR!!!!! */;
-            }
-          else
-            {
-              if (st_lookup(t->attr.ID) == -1)
-                /* TODO: ERROR!!!!! */;
-              else
-                /* already in table, so ignore location, 
-                 * add line number of use only */ 
-                st_insert(t->attr.ID, t->lineno, t, 0);
-            }
+          /* Cannot be reach here!! */
           break;
         case ConstantK:
           /* nothing to do */
