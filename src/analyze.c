@@ -43,6 +43,10 @@ static void nullProc(TreeNode * t)
   else return;
 }
 
+static void typeError(TreeNode * t, char * message)
+{ fprintf(listing,"Type error at line %d: %s\n",t->lineno,message);
+  Error = TRUE;
+}
 /* Procedure insertNode inserts 
  * identifiers stored in t into 
  * the symbol table 
@@ -58,13 +62,13 @@ static void registerSymbol(TreeNode *reg_node, TreeNode *idNode, int flags)
       if (st_lookup(idNode->attr.ID) == -1)
         /* not yet in table, so treat as new definition */
         st_insert(idNode->attr.ID, idNode->lineno, reg_node, 0 /* TODO: in project 4 */);
-      else
-        /* TODO: ERROR!!!!! */;
+      else /* redeclaration */
+        typeError(idNode, "redeclaration");
     }
   else
     {
-      if (st_lookup(idNode->attr.ID) == -1)
-        /* TODO: ERROR!!!!! */;
+      if (st_lookup(idNode->attr.ID) == -1) /* undeclared V/P/F */
+        typeError(idNode, "Undeclaration");
       else
         /* already in table, so ignore location, 
          * add line number of use only */ 
@@ -154,12 +158,9 @@ static void insertNode( TreeNode * t, int flags)
           insertNode(t->attr.multExpr.rexpr, 0);
           break;
 
-          /* Array Subscription and Function Invoke */
         case VariableK:
           registerSymbol(t, t, 0);
-          insertNode(t->attr.arr.arr_expr, 0);
           break;
-
         case ArrayK:
           registerSymbol(t, t->attr.arr._id, 0);
           insertNode(t->attr.arr.arr_expr, 0);
@@ -201,10 +202,6 @@ void buildSymtab(TreeNode * syntaxTree)
   */
 }
 
-static void typeError(TreeNode * t, char * message)
-{ fprintf(listing,"Type error at line %d: %s\n",t->lineno,message);
-  Error = TRUE;
-}
 
 /* Procedure checkNode performs
  * type checking at a single tree node
