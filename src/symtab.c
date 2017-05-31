@@ -140,13 +140,17 @@ void st_insert( char * name, int lineno, TreeNode *node, int loc )
 /* Function st_lookup returns the memory 
  * location of a variable or -1 if not found
  */
-int st_lookup ( char * name )
+int st_lookup ( char * name, int * is_cur_scope /* 0 or 1 */ )
 { int h = hash(name);
   BucketList l =  hashTable[h];
   while ((l != NULL) && (strcmp(name,l->name) != 0))
     l = l->next;
   if (l == NULL) return -1;
-  else return l->memloc;
+  else 
+    {
+      *is_cur_scope = (cur_scope_level == l->scope_level);
+      return l->memloc;
+    }
 }
 
 typedef enum { VAR, PAR, FUNC } ID_TYPE;

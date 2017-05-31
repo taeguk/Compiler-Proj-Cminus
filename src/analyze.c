@@ -68,9 +68,10 @@ static void printError(TreeNode * t, const char *error_type, const char *fmt, ..
 
 static void registerSymbol(TreeNode *reg_node, TreeNode *idNode, int flags)
 {
+  int is_cur_scope;
   if (flags & NewID)
     {
-      if (st_lookup(idNode->attr.ID) == -1)
+      if (st_lookup(idNode->attr.ID, &is_cur_scope) == -1 || !is_cur_scope)
         {
           /* not yet in table, so treat as new definition */
           st_insert(idNode->attr.ID, idNode->lineno, reg_node, 0 /* TODO: in project 4 */);
@@ -82,7 +83,7 @@ static void registerSymbol(TreeNode *reg_node, TreeNode *idNode, int flags)
     }
   else
     {
-      if (st_lookup(idNode->attr.ID) == -1) /* undeclared V/P/F */
+      if (st_lookup(idNode->attr.ID, &is_cur_scope) == -1) /* undeclared V/P/F */
         {
           printError(idNode, "Declaration", "Undeclared symbol \"%s\"", idNode->attr.ID);
         }

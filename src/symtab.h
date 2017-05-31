@@ -24,7 +24,7 @@ void st_insert( char * name, int lineno, TreeNode *node, int loc );
 /* Function st_lookup returns the memory 
  * location of a variable or -1 if not found
  */
-int st_lookup ( char * name );
+int st_lookup ( char * name, int * is_cur_scope /* 0 or 1 */ );
 
 /* Procedure printSymTab prints a formatted 
  * listing of the symbol table contents 
