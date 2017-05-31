@@ -92,13 +92,21 @@ typedef enum {
 } NodeKind;
 
 /* ExpType is used for type checking */
-typedef enum {Void,Integer,Boolean,IntegerArray} ExpType;
+typedef enum {
+    NotResolvedT,
+    ErrorT,
+    NoneT,
+    VoidT,
+    IntT,
+    IntArrayT,
+} NodeType;
 
 typedef struct treeNode {
   struct treeNode *sibling;
   int lineno;
   NodeKind nodeKind;
-  ExpType expType;  // Added for semantic analyzer.
+  NodeType nodeType;
+
   union {
       // VariableDeclarationK
       struct {

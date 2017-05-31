@@ -46,10 +46,10 @@ static void nullProc(TreeNode * t)
   else return;
 }
 
-static void typeError(TreeNode * t, const char *fmt, ...)
+static void printError(TreeNode * t, const char *error_type, const char *fmt, ...)
 {
   va_list args;
-  fprintf(listing, "Type error at line %d: ", t->lineno);
+  fprintf(listing, "%s error at line %d: ", error_type, t->lineno);
 
   va_start(args, fmt);
   vfprintf(listing, fmt, args);
@@ -77,14 +77,14 @@ static void registerSymbol(TreeNode *reg_node, TreeNode *idNode, int flags)
         }
       else /* redeclaration */
         {
-          typeError(idNode, "Redeclaration of symbol \"%s\"", idNode->attr.ID);
+          printError(idNode, "Declaration", "Redeclaration of symbol \"%s\"", idNode->attr.ID);
         }
     }
   else
     {
       if (st_lookup(idNode->attr.ID) == -1) /* undeclared V/P/F */
         {
-          typeError(idNode, "Undeclared symbol \"%s\"", idNode->attr.ID);
+          printError(idNode, "Declaration", "Undeclared symbol \"%s\"", idNode->attr.ID);
         }
       else
         {
@@ -275,9 +275,91 @@ static void checkNode(TreeNode * t)
   }
 }
 */
-/* Procedure typeCheck performs type checking 
- * by a postorder syntax tree traversal
+/* Procedure typeCheck performs type evaluation
+ * by syntax tree traversal
+ * This procedure does not check whether type of
+ * child node is normal.
  */
-void typeCheck(TreeNode * syntaxTree)
-{ //traverse(syntaxTree,nullProc,checkNode);
+NodeType typeCheck(TreeNode *t)
+{
+  if (t == NULL) return NoneT;
+  if (t->nodeType != NotResolvedT) return t->nodeType;
+
+  switch (t->nodeKind)
+    {
+    case VariableDeclarationK:
+      if(typeCheck(t->attr.varDecl.type_spec) != IntT)
+        {
+          printError(t, "Type", "Variable type other than \'int\' is not allowed.");
+          t->nodeType = ErrorT;
+        }
+      else
+        {
+          t->nodeType = NoneT;
+        }
+      break;
+
+    case ArrayDeclarationK:
+      if(typeCheck(t->attr.arrDecl.type_spec) != IntT)
+        {
+          printError(t, "Type", "Array type other than \'int\' is not allowed.");
+          t->nodeType = ErrorT;
+        }
+      else
+        {
+          t->nodeType = NoneT;
+        }
+      break;
+
+    case FunctionDeclarationK:
+      // TODO: Check type of return value
+      t->nodeType = NoneT;
+      break;
+
+    case VariableParameterK:
+    case ArrayParameterK:
+      t->nodeType = NoneT;
+      break;
+
+    // order of ExpressionStatementK has been changed for brevity
+    case ExpressionStatementK:
+      // if expr is NULL (t is ';'), typeEval will return NoneT
+      t->nodeType = typeCheck(t->attr.exprStmt.expr);
+      break;
+
+    case CompoundStatementK:
+    case SelectionStatementK:
+    case IterationStatementK:
+    case ReturnStatementK:
+      t->nodeType = NoneT;
+      break;
+
+      // TODO: check for each expression
+    case AssignExpressionK:
+    case ComparisonExpressionK:
+    case AdditiveExpressionK:
+    case MultiplicativeExpressionK:
+      t->nodeType = IntT;
+      break;
+
+    case VariableK:
+    case ArrayK:
+    case CallK:
+
+    case ConstantK:
+      t->nodeType = IntT;
+      break;
+    case TokenTypeK:
+      t->nodeType = NoneT;
+      break;
+
+    case ErrorK:
+      // TODO: error
+    default:
+      // TODO: error
+      break;
+    }
+
+  // Recursion
+  typeCheck(t->sibling);
 }
