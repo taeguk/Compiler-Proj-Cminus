@@ -9,11 +9,12 @@ BISON_CODE=cm.y
 BISON_SRC=cm.tab.c
 BISON_HDR=cm.tab.h
 
-CC_FLAGS=-g
+CC_FLAGS = 
 
 TARGET = util analyze symtab
 
-build: build.bison build.lex build.core # $(BUILD_DIR)/$(BISON_HDR)
+# Targets
+build: build.bison build.lex build.core
 	gcc -o $(SRC_DIR)/../$(MAIN_PROG) $(OBJS_DIR)/*.o
 
 build.lex: cm.l .mkdir.o
@@ -29,5 +30,25 @@ build.core: $(addsuffix .o, $(TARGET))
 build.bison: build.lex $(BISON_CODE)
 	bison -o $(BUILD_DIR)/$(BISON_SRC) -vd $(BISON_CODE)
 
+
+# make warn : add gcc warning options
+.PHONY: warn
+warn: CC_FLAGS+= -Wall
+warn: CC_FLAGS+= -pedantic
+# warn: CC_FLAGS+= -Wtraditional
+warn: CC_FLAGS+= -Wshadow
+warn: CC_FLAGS+= -Wpointer-arith
+warn: CC_FLAGS+= -Wcast-qual
+warn: CC_FLAGS+= -Wcast-align
+warn: CC_FLAGS+= -Wstrict-prototypes
+warn: CC_FLAGS+= -Wmissing-prototypes
+warn: CC_FLAGS+= -Wconversion
+warn: build
+
+
+# make debug: add -g option, and we can debug.
+.PHONY: debug
+debug: CC_FLAGS += -g
+debug: build
 
 include $(SRC_DIR)/rules.mk
