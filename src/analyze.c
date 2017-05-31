@@ -68,7 +68,6 @@ static void typeError(TreeNode * t, const char *fmt, ...)
 
 static void registerSymbol(TreeNode *reg_node, TreeNode *idNode, int flags)
 {
-  static char buf[256];
   if (flags & NewID)
     {
       if (st_lookup(idNode->attr.ID) == -1)
