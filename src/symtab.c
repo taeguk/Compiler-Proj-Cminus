@@ -195,7 +195,7 @@ void printSymTab(FILE * listing)
           int is_arr, size_arr = 0;
           ID_TYPE id_type = -1; /* (Var,Par,Func) (0,1,2) */
           DATA_TYPE data_type; /* (void, int, array) (0,1,2) */
-          
+
           switch (node->nodeKind)
             {
               /* Declaration */

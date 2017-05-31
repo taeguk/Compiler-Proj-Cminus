@@ -6,6 +6,8 @@
 /* Kenneth C. Louden                                */
 /****************************************************/
 
+#include <stdarg.h>
+
 #include "globals.h"
 #include "symtab.h"
 #include "analyze.h"
@@ -39,12 +41,21 @@ static void traverse( TreeNode * t,
  * traversals from traverse
  */
 static void nullProc(TreeNode * t)
-{ if (t==NULL) return;
+{
+  if (t==NULL) return;
   else return;
 }
 
-static void typeError(TreeNode * t, char * message)
-{ fprintf(listing,"Type error at line %d: %s\n",t->lineno,message);
+static void typeError(TreeNode * t, const char *fmt, ...)
+{
+  va_list args;
+  fprintf(listing, "Type error at line %d: ", t->lineno);
+
+  va_start(args, fmt);
+  vfprintf(listing, fmt, args);
+  va_end(args);
+
+  fprintf(listing, "\n");
   Error = TRUE;
 }
 /* Procedure insertNode inserts 
@@ -60,19 +71,27 @@ static void registerSymbol(TreeNode *reg_node, TreeNode *idNode, int flags)
   if (flags & NewID)
     {
       if (st_lookup(idNode->attr.ID) == -1)
-        /* not yet in table, so treat as new definition */
-        st_insert(idNode->attr.ID, idNode->lineno, reg_node, 0 /* TODO: in project 4 */);
+        {
+          /* not yet in table, so treat as new definition */
+          st_insert(idNode->attr.ID, idNode->lineno, reg_node, 0 /* TODO: in project 4 */);
+        }
       else /* redeclaration */
-        typeError(idNode, "redeclaration");
+        {
+          typeError(idNode, "Redeclaration of symbol \"%s\"", idNode->attr.ID);
+        }
     }
   else
     {
       if (st_lookup(idNode->attr.ID) == -1) /* undeclared V/P/F */
-        typeError(idNode, "Undeclaration");
+        {
+          typeError(idNode, "Undeclared symbol \"%s\"", idNode->attr.ID);
+        }
       else
-        /* already in table, so ignore location, 
-         * add line number of use only */ 
-        st_insert(idNode->attr.ID, idNode->lineno, NULL, 0);
+        {
+          /* already in table, so ignore location,
+           * add line number of use only */
+          st_insert(idNode->attr.ID, idNode->lineno, NULL, 0);
+        }
     }
 
 }
