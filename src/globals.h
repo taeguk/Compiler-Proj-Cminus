@@ -92,6 +92,7 @@ typedef enum {
 } NodeKind;
 
 /* ExpType is used for type checking */
+/* TODO: naming issue */
 typedef enum {
     NotResolvedT,
     ErrorT,
@@ -99,6 +100,7 @@ typedef enum {
     VoidT,
     IntT,
     IntArrayT,
+    FuncT,
 } NodeType;
 
 typedef struct treeNode {

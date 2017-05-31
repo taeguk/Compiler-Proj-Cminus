@@ -114,9 +114,10 @@ int st_pop_scope(void)
 void st_insert( char * name, int lineno, TreeNode *node, int loc )
 { int h = hash(name);
   BucketList l =  hashTable[h];
-  while ((l != NULL) && (strcmp(name,l->name) != 0))
+  while ((l != NULL) && (l->scope_level == cur_scope_level) && 
+         (strcmp(name,l->name) != 0))
     l = l->next;
-  if (l == NULL) /* variable not yet in table */
+  if (l == NULL || l->scope_level < cur_scope_level) /* variable not yet in current scope. */
   { l = (BucketList) malloc(sizeof(struct BucketListRec));
     l->name = name;
     l->lines = (LineList) malloc(sizeof(struct LineListRec));
@@ -187,7 +188,13 @@ void printSymTab(FILE * listing)
   for (i=0;i<SIZE;++i)
     {
       BucketList l;
+
+      // skip symbols in deeper scopes.
       for (l = hashTable[i]; 
+           l && l->scope_level > cur_scope_level;
+           l = l->next);
+
+      for (; 
            l && l->scope_level == cur_scope_level; 
            l = l->next)
         {

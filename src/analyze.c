@@ -315,6 +315,7 @@ NodeType typeCheck(TreeNode *t)
     case FunctionDeclarationK:
       // TODO: Check type of return value
       t->nodeType = NoneT;
+      typeCheck(t->attr.funcDecl.cmpdStmt);
       break;
 
     case VariableParameterK:
@@ -329,23 +330,146 @@ NodeType typeCheck(TreeNode *t)
       break;
 
     case CompoundStatementK:
+      typeCheck(t->attr.cmpdStmt.local_decl);
+      typeCheck(t->attr.cmpdStmt.stmt_list);
+      break;
+
     case SelectionStatementK:
+      if (typeCheck(t->attr.selectStmt.expr) != IntT)
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+      else
+        {
+          typeCheck(t->attr.selectStmt.if_stmt);
+          typeCheck(t->attr.selectStmt.else_stmt);
+        }
+      break;
+
     case IterationStatementK:
+      if (typeCheck(t->attr.iterStmt.expr) != IntT)
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+      else
+        {
+          typeCheck(t->attr.iterStmt.loop_stmt);
+        }
+      break;
+
     case ReturnStatementK:
+      typeCheck(t->attr.retStmt.expr);
       t->nodeType = NoneT;
       break;
 
       // TODO: check for each expression
     case AssignExpressionK:
+    {
+      NodeType exprType = typeCheck(t->attr.assignStmt.expr);
+      NodeType varType = typeCheck(t->attr.assignStmt._var);
+      if (varType != IntT || varType != exprType)
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+      else
+        {
+          // TODO: review
+          t->nodeType = varType;
+        }
+    }
+      break;
     case ComparisonExpressionK:
+    {
+      NodeType lType = typeCheck(t->attr.cmpExpr.lexpr);
+      NodeType rType = typeCheck(t->attr.cmpExpr.rexpr);
+      if (lType == IntT && lType == rType)
+        {
+          t->nodeType = IntT;
+        }
+      else
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+    }
+      break;
     case AdditiveExpressionK:
+    {
+      NodeType lType = typeCheck(t->attr.addExpr.lexpr);
+      NodeType rType = typeCheck(t->attr.addExpr.rexpr);
+      if (lType == IntT && lType == rType)
+        {
+          t->nodeType = IntT;
+        }
+      else
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+    }
+      break;
     case MultiplicativeExpressionK:
-      t->nodeType = IntT;
+    {
+      NodeType lType = typeCheck(t->attr.multExpr.lexpr);
+      NodeType rType = typeCheck(t->attr.multExpr.rexpr);
+      if (lType == IntT && lType == rType)
+        {
+          t->nodeType = IntT;
+        }
+      else
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+    }
       break;
 
-    case VariableK:
     case ArrayK:
+      if (typeCheck(t->attr.arr._id) != IntArrayT)
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+      else
+        {
+          t->nodeType = IntT;
+        }
+      typeCheck(t->attr.arr_expr);
     case CallK:
+    {
+      NodeType fType = typeCheck(t->attr.call._id);
+
+      if (fType != FuncT)
+        {
+          // error
+          // TODO: error print
+          t->nodeType = ErrorT;
+        }
+      else
+        {
+          /* TODO: how we can get function return type? */
+          t->nodeType = ErrorT;
+        }
+      typeCheck(t->attr.call.expr_list);
+    }
+      break;
+      
+    case VariableK:
+      /* TODO: get variable's type from st_lookup.
+       * we have to modify st_lookup for getting variable's type.
+       * */
+      t->nodeType = ErrorT;
+      break;
 
     case ConstantK:
       t->nodeType = IntT;
