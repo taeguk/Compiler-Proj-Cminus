@@ -1,18 +1,18 @@
-void void_func()
+void voidFunc(void)
 {
   int a;
   a = 1;
 }
 
-int int_func()
+int intFunc(void)
 {
   int a;
   return a = 1;
 }
 
-void main()
+void main(void)
 {
   int g;
-  g = int_func(); /* pass */
-  g = void_func(); /* fail */
+  g = intFunc(); /* pass */
+  g = voidFunc(); /* fail */
 }
