@@ -571,9 +571,9 @@ NodeType typeCheck(TreeNode *n)
           SymbolInfo *info = t->symbolInfo;
           NodeType fType = typeCheck(t->attr.call._id);
 
+          // TODO: print out error. note that undeclared function's info == NULL.
           if (info == NULL)
             {
-              DONT_OCCUR_PRINT;
               t->nodeType = ErrorT;
               isError = TRUE;
             }
