@@ -315,7 +315,7 @@ NodeType typeCheck(TreeNode *t)
     case FunctionDeclarationK:
       // TODO: Check type of return value
       t->nodeType = NoneT;
-      typeCheck(t->attr.funcDecl.cmpdStmt);
+      typeCheck(t->attr.funcDecl.cmpd_stmt);
       break;
 
     case VariableParameterK:
@@ -444,7 +444,7 @@ NodeType typeCheck(TreeNode *t)
         {
           t->nodeType = IntT;
         }
-      typeCheck(t->attr.arr_expr);
+      typeCheck(t->attr.arr.arr_expr);
     case CallK:
     {
       NodeType fType = typeCheck(t->attr.call._id);
