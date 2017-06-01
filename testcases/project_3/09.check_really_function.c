@@ -1,6 +1,6 @@
 void func1(int a) {}
 int func2(void) {}
-int func3(int aa[23]) {}
+int func3(int aa[]) {}
 
 
 void main (void)
