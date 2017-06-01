@@ -122,7 +122,7 @@ typedef struct
       struct {
           NodeType retType;
           int len;
-          NodeType paramTypeList[111];
+          NodeType * paramTypeList;
       } funcInfo;
   } attr;
 } SymbolInfo;

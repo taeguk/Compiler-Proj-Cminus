@@ -46,6 +46,118 @@ static void nullProc(TreeNode * t)
   else return;
 }
 
+static NodeType tokenToNodeType (TokenType token)
+{
+  switch (token)
+    {
+    case INT:
+      return IntT;
+    case VOID:
+      return VoidT;
+    default:
+      DONT_OCCUR_PRINT;
+      return ErrorT;
+    }
+}
+
+static SymbolInfo * setSymbolInfo (TreeNode *t)
+{
+  SymbolInfo * symbolInfo;
+
+  if ((symbolInfo = malloc(sizeof(*symbolInfo)) ) == NULL)
+    {
+      // Error
+      DONT_OCCUR_PRINT;
+      return NULL;
+    }
+
+  switch (t->nodeKind)
+    {
+      case VariableDeclarationK:
+        if (tokenToNodeType(t->attr.varDecl.type_spec->attr.TOK) != IntT)
+          return NULL; // TODO: Error Message
+        symbolInfo->nodeType = IntT;
+        break;
+
+
+      case ArrayDeclarationK:
+        if (tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK) != IntT)
+          return NULL; // TODO: Error message
+        symbolInfo->nodeType = IntArrayT; // TODO: Type check
+        symbolInfo->attr.arrInfo.len = t->attr.arrDecl._num->attr.NUM; // TODO: bracket type check
+        break;
+
+
+      case FunctionDeclarationK:
+        if (tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK) == ErrorT)
+          return NULL; // TODO: Error message
+        symbolInfo->nodeType = FuncT;
+        symbolInfo->attr.funcInfo.retType =
+          tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK);
+
+        TreeNode * trace;
+        NodeType * newParamList;
+        int n_param;
+        int i;
+
+        n_param = 0;
+        trace = t->attr.funcDecl.params;
+
+        // TODO: Parameter == 0 check, Void check
+        while (trace)
+          {
+            ++ n_param;
+            trace = trace->sibling;
+          }
+        if ((newParamList = malloc(n_param * sizeof(NodeType))) == NULL)
+          {
+            DONT_OCCUR_PRINT;
+            return NULL;
+          }
+
+        trace = t->attr.funcDecl.params;
+        i = 0;
+        while (trace)
+          {
+            if (trace->nodeKind == VariableParameterK)
+              newParamList[i] =
+                tokenToNodeType(trace->attr.varParam.type_spec->attr.TOK); // Is it need type check?
+            else if (trace->nodeKind == ArrayParameterK)
+              newParamList[i] =
+                tokenToNodeType(trace->attr.arrParam.type_spec->attr.TOK);
+            else
+              {
+                DONT_OCCUR_PRINT; // TODO: check is it really "DON'T occur"
+                return NULL;
+              }
+
+            ++i;
+            trace = trace->sibling;
+          }
+
+
+        symbolInfo->attr.funcInfo.paramTypeList = newParamList;
+        break;
+
+
+      case VariableParameterK:
+        if (tokenToNodeType(t->attr.varParam.type_spec->attr.TOK) != IntT)
+          return NULL; // TODO: Error Message
+        symbolInfo->nodeType = IntT;
+        break;
+
+
+      case ArrayParameterK:
+        if (tokenToNodeType(t->attr.arrParam.type_spec->attr.TOK) != IntT)
+          return NULL; // TODO: Error Message
+        symbolInfo->nodeType = IntArrayT;
+        break;
+    }
+
+
+  return symbolInfo;
+}
+
 static void printError(TreeNode * t, const char *error_type, const char *fmt, ...)
 {
   va_list args;
