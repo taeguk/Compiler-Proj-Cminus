@@ -34,6 +34,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 {
   SymbolInfo * symbolInfo;
 
+  if (t == NULL) return NULL;
   if ((symbolInfo = malloc(sizeof(*symbolInfo)) ) == NULL)
     {
       // Error
