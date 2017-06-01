@@ -48,7 +48,7 @@ warn: build
 
 # make debug: add -g option, and we can debug.
 .PHONY: debug
-debug: CC_FLAGS += -g
+debug: CC_FLAGS += -g -D DEBUG
 debug: build
 
 include $(SRC_DIR)/rules.mk

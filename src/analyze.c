@@ -196,10 +196,10 @@ static void insertNode( TreeNode * t, int flags)
           /* nothing to do */
           break;
         case ErrorK:
-          /* TODO: ERROR!! */
+          DONT_OCCUR_PRINT;
+          break;
         default:
-          /* TODO: ERROR!! */
-          ;
+          DONT_OCCUR_PRINT;
         }
     }
 }
@@ -476,9 +476,9 @@ NodeType typeCheck(TreeNode *t)
       break;
 
     case ErrorK:
-      // TODO: error
+      DONT_OCCUR_PRINT;
     default:
-      // TODO: error
+      DONT_OCCUR_PRINT;
       break;
     }
 

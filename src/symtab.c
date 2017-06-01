@@ -169,6 +169,7 @@ set_data_type (TokenType op)
       return DT_VOID;
       break;
     default:
+      DONT_OCCUR_PRINT;
       return DT_INVALID;
       break;
     }
@@ -244,6 +245,7 @@ void printSymTab(FILE * listing)
               break;
             default:
               fprintf(listing, "No nodeKind, %d\n", node->nodeKind);
+              DONT_OCCUR_PRINT;
             }
 
           /* print name */
@@ -269,6 +271,7 @@ void printSymTab(FILE * listing)
               break;
             default:
               fprintf(listing, "No id_type, %-8d", id_type);
+              DONT_OCCUR_PRINT;
               break;
             }
 
@@ -293,6 +296,8 @@ void printSymTab(FILE * listing)
             case DT_INVALID:
               fprintf(listing, "%-5s", "Invalid");
               break;
+            default:
+              DONT_OCCUR_PRINT;
             }
 
           /* line numbers */

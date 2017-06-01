@@ -19,6 +19,8 @@
 #include "build/cm.tab.h"
 #endif
 
+#include "log_debugger.h"
+
 #ifndef FALSE
 #define FALSE 0
 #endif

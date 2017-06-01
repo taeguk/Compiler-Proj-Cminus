@@ -139,9 +139,7 @@ printToken(TokenType token, const char* tokenString)
                           tokenString); break;
 
     default:       /* should never happen */
-                   fprintf(listing,
-                           "[DEBUG] UNKNOWN TOKEN %d\n",
-                           token);
+           DONT_OCCUR_PRINT; 
   }
 }
 
