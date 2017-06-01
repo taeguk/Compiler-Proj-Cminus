@@ -11,7 +11,7 @@
 #endif /* DEBUG */
 
 #define DONT_OCCUR_PRINT do { \
-    fprintf(listing, "%s:%d:%s: This must not occur", \
+    fprintf(listing, "%s:%d:%s: This must not occur\n", \
                     __FILE__, __LINE__, __FUNCTION__); \
     } while(0)
 
