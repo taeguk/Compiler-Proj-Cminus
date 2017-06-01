@@ -105,11 +105,34 @@ typedef enum {
     FuncT,
 } NodeType;
 
+typedef struct
+{
+  NodeType nodeType;
+  union {
+      // VariableDeclarationK
+      struct {
+      } intInfo;
+
+      // ArrayDeclarationK
+      struct {
+          int len;
+      } arrInfo;
+
+      // FunctionDeclarationK
+      struct {
+          NodeType retType;
+          int len;
+          NodeType paramTypeList[111];
+      } funcInfo;
+  } attr;
+} SymbolInfo;
+
 typedef struct treeNode {
   struct treeNode *sibling;
   int lineno;
   NodeKind nodeKind;
   NodeType nodeType;
+  SymbolInfo * symbolInfo;
 
   union {
       // VariableDeclarationK
