@@ -458,7 +458,7 @@ NodeType typeCheck(TreeNode *n)
         case ReturnStatementK:
         {
           if(t->attr.retStmt.retType != IntT
-             || t->attr.retStmt.retType != VoidT)
+             && t->attr.retStmt.retType != VoidT)
             {
               DONT_OCCUR_PRINT;
               t->nodeType = ErrorT;
