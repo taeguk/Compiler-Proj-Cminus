@@ -128,7 +128,6 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             trace = trace->sibling;
           }
 
-
         symbolInfo->attr.funcInfo.paramTypeList = newParamList;
         break;
 
@@ -313,6 +312,7 @@ void buildSymtab(TreeNode * syntaxTree)
 {
   insertNode(syntaxTree, 0);
   printSymTab(listing);
+  typeCheck(syntaxTree);
   /*
   if (TraceAnalyze)
   { fprintf(listing,"\nSymbol table:\n\n");
@@ -410,6 +410,10 @@ NodeType typeCheck(TreeNode *n)
               if(stmt->nodeKind == ReturnStatementK)
                 {
                   stmt->attr.retStmt.retType = t->attr.cmpdStmt.retType;
+                }
+              if(stmt->nodeKind == CompoundStatementK)
+                {
+                  stmt->attr.cmpdStmt.retType = t->attr.cmpdStmt.retType;
                 }
             }
 
