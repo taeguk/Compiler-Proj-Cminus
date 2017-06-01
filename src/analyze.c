@@ -363,9 +363,9 @@ NodeType typeCheck(TreeNode *n)
           TreeNode *cmpdStmt = t->attr.funcDecl.cmpd_stmt;
           if(cmpdStmt != NULL)
             {
-              if(t->attr.arrDecl.type_spec->attr.TOK != INT)
+              if(t->attr.arrDecl.type_spec->attr.TOK == INT)
                 cmpdStmt->attr.cmpdStmt.retType = IntT;
-              else if(t->attr.arrDecl.type_spec->attr.TOK != VOID)
+              else if(t->attr.arrDecl.type_spec->attr.TOK == VOID)
                 cmpdStmt->attr.cmpdStmt.retType = VoidT;
               else
                 DONT_OCCUR_PRINT;
