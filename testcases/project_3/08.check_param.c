@@ -1,4 +1,4 @@
-void func(int param1, int param2, int param3[30]) {  }
+void func(int param1, int param2, int param3[]) {  }
 
 void main(void)
 {
