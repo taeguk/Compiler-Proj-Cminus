@@ -30,6 +30,19 @@ static NodeType tokenToNodeType (TokenType token)
     }
 }
 
+static void printError(TreeNode * t, const char *error_type, const char *fmt, ...)
+{
+  va_list args;
+  fprintf(listing, "%s error at line %d: ", error_type, t->lineno);
+
+  va_start(args, fmt);
+  vfprintf(listing, fmt, args);
+  va_end(args);
+
+  fprintf(listing, "\n");
+  Error = TRUE;
+}
+
 static SymbolInfo * setSymbolInfo (TreeNode *t)
 {
   SymbolInfo * symbolInfo;
@@ -46,14 +59,20 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
     {
       case VariableDeclarationK:
         if (tokenToNodeType(t->attr.varDecl.type_spec->attr.TOK) != IntT)
-          return NULL; // TODO: Error Message
+          {
+            printError(t, "Type", "Variable '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            return NULL;
+          }
         symbolInfo->nodeType = IntT;
         break;
 
 
       case ArrayDeclarationK:
         if (tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK) != IntT)
-          return NULL; // TODO: Error message
+          {
+            printError(t, "Type", "Array '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            return NULL;
+          }
         symbolInfo->nodeType = IntArrayT; // TODO: Type check
         symbolInfo->attr.arrInfo.len = t->attr.arrDecl._num->attr.NUM; // TODO: bracket type check
         break;
@@ -61,7 +80,10 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
       case FunctionDeclarationK:
         if (tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK) == ErrorT)
-          return NULL; // TODO: Error message
+          {
+            DONT_OCCUR_PRINT;
+            return NULL;
+          }
         symbolInfo->nodeType = FuncT;
         symbolInfo->attr.funcInfo.retType =
           tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK);
@@ -113,33 +135,26 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
       case VariableParameterK:
         if (tokenToNodeType(t->attr.varParam.type_spec->attr.TOK) != IntT)
-          return NULL; // TODO: Error Message
+          {
+            printError(t, "Type", "Variable parameter '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            return NULL;
+          }
         symbolInfo->nodeType = IntT;
         break;
 
 
       case ArrayParameterK:
         if (tokenToNodeType(t->attr.arrParam.type_spec->attr.TOK) != IntT)
-          return NULL; // TODO: Error Message
+          {
+            printError(t, "Type", "Array parameter '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            return NULL;
+          }
         symbolInfo->nodeType = IntArrayT;
         break;
     }
 
 
   return symbolInfo;
-}
-
-static void printError(TreeNode * t, const char *error_type, const char *fmt, ...)
-{
-  va_list args;
-  fprintf(listing, "%s error at line %d: ", error_type, t->lineno);
-
-  va_start(args, fmt);
-  vfprintf(listing, fmt, args);
-  va_end(args);
-
-  fprintf(listing, "\n");
-  Error = TRUE;
 }
 
 #define AlreadyPushedScope 2
