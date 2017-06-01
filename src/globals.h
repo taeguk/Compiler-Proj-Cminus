@@ -172,6 +172,7 @@ typedef struct treeNode {
       struct {
           struct treeNode *local_decl;
           struct treeNode *stmt_list;
+          NodeType retType;
       } cmpdStmt;
 
       // ExpressionStatementK
@@ -195,6 +196,7 @@ typedef struct treeNode {
       // ReturnStatementK
       struct {
           struct treeNode *expr;
+          NodeType retType;
       } retStmt;
 
       // AssignExpressionK

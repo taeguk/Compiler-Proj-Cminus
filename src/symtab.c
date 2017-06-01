@@ -35,32 +35,6 @@ static int hash ( char * key )
   return temp;
 }
 
-/* the list of line numbers of the source 
- * code in which a variable is referenced
- */
-typedef struct LineListRec
-   { int lineno;
-     struct LineListRec * next;
-   } * LineList;
-
-/* The record in the bucket lists for
- * each variable, including name, 
- * assigned memory location, and
- * the list of line numbers in which
- * it appears in the source code
- */
-typedef struct BucketListRec
-   {
-     char * name;
-     LineList lines;
-     TreeNode *tree_node;
-     int scope_level;
-     // TODO: 'memloc' will be considered in project 4.
-     int memloc; /* memory location for variable */ 
-     
-     struct BucketListRec * next;
-   } * BucketList;
-
 /* the hash table */
 
 static BucketList hashTable[SIZE];
@@ -111,8 +85,9 @@ int st_pop_scope(void)
  * loc = memory location is inserted only the
  * first time, otherwise ignored
  */
-void st_insert( char * name, int lineno, TreeNode *node, int loc )
-{ int h = hash(name);
+void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
+{
+  int h = hash(name);
   BucketList l =  hashTable[h];
   while ((l != NULL) && (l->scope_level == cur_scope_level) && 
          (strcmp(name,l->name) != 0))
@@ -123,7 +98,7 @@ void st_insert( char * name, int lineno, TreeNode *node, int loc )
     l->lines = (LineList) malloc(sizeof(struct LineListRec));
     l->lines->lineno = lineno;
     l->tree_node = node;
-    l->memloc = loc;
+    l->symbolInfo = info;
     l->lines->next = NULL;
     l->next = hashTable[h];
     l->scope_level = cur_scope_level;
@@ -138,20 +113,23 @@ void st_insert( char * name, int lineno, TreeNode *node, int loc )
   }
 } /* st_insert */
 
-/* Function st_lookup returns the memory 
+/* Function st_lookup returns the memory
  * location of a variable or -1 if not found
  */
-int st_lookup ( char * name, int * is_cur_scope /* 0 or 1 */ )
-{ int h = hash(name);
+SymbolInfo* st_lookup ( char * name, int * is_cur_scope /* 0 or 1 */ )
+{
+  int h = hash(name);
   BucketList l =  hashTable[h];
+
   while ((l != NULL) && (strcmp(name,l->name) != 0))
     l = l->next;
-  if (l == NULL) return -1;
-  else 
+
+  if (l != NULL)
     {
       *is_cur_scope = (cur_scope_level == l->scope_level);
-      return l->memloc;
     }
+
+  return l ? l->symbolInfo : NULL;
 }
 
 typedef enum { VAR, PAR, FUNC } ID_TYPE;

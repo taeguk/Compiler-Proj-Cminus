@@ -16,36 +16,6 @@
 /* counter for variable memory locations */
 static int location = 0;
 
-/* Procedure traverse is a generic recursive 
- * syntax tree traversal routine:
- * it applies preProc in preorder and postProc 
- * in postorder to tree pointed to by t
- */
-/*
-static void traverse( TreeNode * t,
-               void (* preProc) (TreeNode *),
-               void (* postProc) (TreeNode *) )
-{ if (t != NULL)
-  { preProc(t);
-    { int i;
-      for (i=0; i < MAXCHILDREN; i++)
-        traverse(t->child[i],preProc,postProc);
-    }
-    postProc(t);
-    traverse(t->sibling,preProc,postProc);
-  }
-}
-*/
-/* nullProc is a do-nothing procedure to 
- * generate preorder-only or postorder-only
- * traversals from traverse
- */
-static void nullProc(TreeNode * t)
-{
-  if (t==NULL) return;
-  else return;
-}
-
 static NodeType tokenToNodeType (TokenType token)
 {
   switch (token)
@@ -170,31 +140,33 @@ static void printError(TreeNode * t, const char *error_type, const char *fmt, ..
   fprintf(listing, "\n");
   Error = TRUE;
 }
-/* Procedure insertNode inserts 
- * identifiers stored in t into 
- * the symbol table 
- */
 
 #define AlreadyPushedScope 2
 
-static void registerSymbol(TreeNode *reg_node, TreeNode *idNode)
+static int registerSymbol(TreeNode *regNode, TreeNode *idNode, SymbolInfo * symbolInfo)
 {
   int is_cur_scope;
-  if (st_lookup(idNode->attr.ID, &is_cur_scope) == -1 || !is_cur_scope)
+  if (st_lookup(idNode->attr.ID, &is_cur_scope) == NULL || !is_cur_scope)
     {
       /* not yet in table, so treat as new definition */
-      st_insert(idNode->attr.ID, idNode->lineno, reg_node, 0 /* TODO: in project 4 */);
+      st_insert(idNode->attr.ID, idNode->lineno, regNode, symbolInfo /* TODO: in project 4 */);
+      idNode->nodeType = symbolInfo->nodeType;
+      idNode->symbolInfo = symbolInfo;
+      return TRUE;
     }
   else /* redeclaration */
     {
       printError(idNode, "Declaration", "Redeclaration of symbol \"%s\"", idNode->attr.ID);
+      idNode->nodeType = ErrorT;
+      return FALSE;
     }
 }
 
 static void referSymbol(TreeNode *reg_node, TreeNode *idNode)
 {
   int is_cur_scope;
-  if (st_lookup(idNode->attr.ID, &is_cur_scope) == -1) /* undeclared V/P/F */
+  SymbolInfo * symbolInfo;
+  if ((symbolInfo = st_lookup(idNode->attr.ID, &is_cur_scope)) == NULL) /* undeclared V/P/F */
     {
       printError(idNode, "Declaration", "Undeclared symbol \"%s\"", idNode->attr.ID);
     }
@@ -202,32 +174,32 @@ static void referSymbol(TreeNode *reg_node, TreeNode *idNode)
     {
       /* already in table, so ignore location,
        * add line number of use only */
-      st_insert(idNode->attr.ID, idNode->lineno, NULL, 0);
+      st_insert(idNode->attr.ID, idNode->lineno, NULL, NULL);
+      idNode->nodeType = symbolInfo->nodeType;
+      idNode->symbolInfo = symbolInfo;
     }
 }
 
 static void insertNode( TreeNode * t, int flags)
-{ 
-  /*
-  if (t == NULL)
-    {
-      printf("[Debug in insertNode] t == NULL!!!\n");
-      return;
-    }
-  */
+{
+  int registerSuccess;
+  SymbolInfo * symbolInfo = setSymbolInfo(t);
   for (; t; t = t->sibling)
     {
       switch (t->nodeKind)
         {
           /* Declaration Kinds */
         case VariableDeclarationK:
-          registerSymbol(t, t->attr.varDecl._id);
+          if(symbolInfo == NULL) break;
+          registerSuccess = registerSymbol(t, t->attr.varDecl._id, symbolInfo);
           break;
         case ArrayDeclarationK:
-          registerSymbol(t, t->attr.arrDecl._id);
+          if(symbolInfo == NULL) break;
+          registerSuccess = registerSymbol(t, t->attr.arrDecl._id, symbolInfo);
           break;
         case FunctionDeclarationK:
-          registerSymbol(t, t->attr.funcDecl._id);
+          if(symbolInfo == NULL) break;
+          registerSuccess = registerSymbol(t, t->attr.funcDecl._id, symbolInfo);
           st_push_scope();
           insertNode(t->attr.funcDecl.params, 0);
           insertNode(t->attr.funcDecl.cmpd_stmt, AlreadyPushedScope);
@@ -235,10 +207,12 @@ static void insertNode( TreeNode * t, int flags)
 
           /* Parameter Kinds */
         case VariableParameterK:
-          registerSymbol(t, t->attr.varParam._id);
+          if(symbolInfo == NULL) break;
+          registerSymbol(t, t->attr.varParam._id, symbolInfo);
           break;
         case ArrayParameterK:
-          registerSymbol(t, t->attr.arrParam._id);
+          if(symbolInfo == NULL) break;
+          registerSymbol(t, t->attr.arrParam._id, symbolInfo);
           break;
 
           /* Statement Kinds */
@@ -320,7 +294,7 @@ static void insertNode( TreeNode * t, int flags)
  * table by preorder traversal of the syntax tree
  */
 void buildSymtab(TreeNode * syntaxTree)
-{ //traverse(syntaxTree,insertNode,nullProc);
+{
   insertNode(syntaxTree, 0);
   printSymTab(listing);
   /*
@@ -331,269 +305,341 @@ void buildSymtab(TreeNode * syntaxTree)
   */
 }
 
-
-/* Procedure checkNode performs
- * type checking at a single tree node
- */
-/*
-static void checkNode(TreeNode * t)
-{ switch (t->nodekind)
-  { case ExpK:
-      switch (t->kind.exp)
-      { case OpK:
-          if ((t->child[0]->type != Integer) ||
-              (t->child[1]->type != Integer))
-            typeError(t,"Op applied to non-integer");
-          if ((t->attr.op == EQ) || (t->attr.op == LT))
-            t->type = Boolean;
-          else
-            t->type = Integer;
-          break;
-        case ConstK:
-        case IdK:
-          t->type = Integer;
-          break;
-        default:
-          break;
-      }
-      break;
-    case StmtK:
-      switch (t->kind.stmt)
-      { case IfK:
-          if (t->child[0]->type == Integer)
-            typeError(t->child[0],"if test is not Boolean");
-          break;
-        case AssignK:
-          if (t->child[0]->type != Integer)
-            typeError(t->child[0],"assignment of non-integer value");
-          break;
-        case WriteK:
-          if (t->child[0]->type != Integer)
-            typeError(t->child[0],"write of non-integer value");
-          break;
-        case RepeatK:
-          if (t->child[1]->type == Integer)
-            typeError(t->child[1],"repeat test is not Boolean");
-          break;
-        default:
-          break;
-      }
-      break;
-    default:
-      break;
-
-  }
-}
-*/
 /* Procedure typeCheck performs type evaluation
  * by syntax tree traversal
- * This procedure does not check whether type of
- * child node is normal.
  */
-NodeType typeCheck(TreeNode *t)
+NodeType typeCheck(TreeNode *n)
 {
-  if (t == NULL) return NoneT;
-  if (t->nodeType != NotResolvedT) return t->nodeType;
+  if (n == NULL) return NoneT;
+  if (n->nodeType != NotResolvedT) return n->nodeType;
 
-  switch (t->nodeKind)
+  TreeNode *t = n;
+  for(t=n; t; t=t->sibling)
     {
-    case VariableDeclarationK:
-      if(typeCheck(t->attr.varDecl.type_spec) != IntT)
+      switch (t->nodeKind)
         {
-          printError(t, "Type", "Variable type other than \'int\' is not allowed.");
-          t->nodeType = ErrorT;
-        }
-      else
+        case VariableDeclarationK:
+          if(t->attr.varDecl.type_spec->attr.TOK != INT)
+            {
+              printError(t, "Type", "Variable type other than 'int' is not allowed.");
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              t->nodeType = NoneT;
+            }
+          break;
+
+        case ArrayDeclarationK:
+          if(t->attr.arrDecl.type_spec->attr.TOK != INT)
+            {
+              printError(t, "Type", "Array type other than 'int' is not allowed.");
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              t->nodeType = NoneT;
+            }
+          break;
+
+        case FunctionDeclarationK:
         {
+          TreeNode *cmpdStmt = t->attr.funcDecl.cmpd_stmt;
+          if(cmpdStmt != NULL)
+            {
+              if(t->attr.arrDecl.type_spec->attr.TOK != INT)
+                cmpdStmt->attr.cmpdStmt.retType = IntT;
+              else if(t->attr.arrDecl.type_spec->attr.TOK != VOID)
+                cmpdStmt->attr.cmpdStmt.retType = VoidT;
+              else
+                DONT_OCCUR_PRINT;
+              typeCheck(t->attr.funcDecl.cmpd_stmt);
+            }
           t->nodeType = NoneT;
         }
-      break;
+          break;
 
-    case ArrayDeclarationK:
-      if(typeCheck(t->attr.arrDecl.type_spec) != IntT)
+        case VariableParameterK:
+          if(t->attr.varParam.type_spec->attr.TOK != INT)
+            {
+              printError(t, "Type", "Parameter type other than 'int' or 'int[ ]' is not allowed.");
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              t->nodeType = NoneT;
+            }
+          break;
+
+        case ArrayParameterK:
+          if(t->attr.arrParam.type_spec->attr.TOK != INT)
+            {
+              printError(t, "Type", "Parameter type other than 'int' or 'int[ ]' is not allowed.");
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              t->nodeType = NoneT;
+            }
+          break;
+
+        case CompoundStatementK:
         {
-          printError(t, "Type", "Array type other than \'int\' is not allowed.");
-          t->nodeType = ErrorT;
-        }
-      else
-        {
+          // Propagate return type for return statement
+          TreeNode *stmt;
+          for(stmt = t->attr.cmpdStmt.stmt_list;
+              stmt != NULL;
+              stmt = stmt->sibling)
+            {
+              if(stmt->nodeKind == ReturnStatementK)
+                {
+                  stmt->attr.retStmt.retType = t->attr.cmpdStmt.retType;
+                }
+            }
+
+          typeCheck(t->attr.cmpdStmt.local_decl);
+          typeCheck(t->attr.cmpdStmt.stmt_list);
           t->nodeType = NoneT;
         }
-      break;
+          break;
 
-    case FunctionDeclarationK:
-      // TODO: Check type of return value
-      t->nodeType = NoneT;
-      typeCheck(t->attr.funcDecl.cmpd_stmt);
-      break;
+        case ExpressionStatementK:
+          typeCheck(t->attr.exprStmt.expr);
+          t->nodeType = NoneT;
+          break;
 
-    case VariableParameterK:
-    case ArrayParameterK:
-      t->nodeType = NoneT;
-      break;
+        case SelectionStatementK:
+          if (typeCheck(t->attr.selectStmt.expr) != IntT)
+            {
+              printError(t, "Type", "Expression inside selection statement should be type 'int'.");
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              typeCheck(t->attr.selectStmt.if_stmt);
+              typeCheck(t->attr.selectStmt.else_stmt);
+              t->nodeType = NoneT;
+            }
+          break;
 
-    // order of ExpressionStatementK has been changed for brevity
-    case ExpressionStatementK:
-      // if expr is NULL (t is ';'), typeEval will return NoneT
-      t->nodeType = typeCheck(t->attr.exprStmt.expr);
-      break;
+        case IterationStatementK:
+          if (typeCheck(t->attr.iterStmt.expr) != IntT)
+            {
+              printError(t, "Type", "Expression inside iteration statement should be type 'int'.");
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              typeCheck(t->attr.iterStmt.loop_stmt);
+              t->nodeType = NoneT;
+            }
+          break;
 
-    case CompoundStatementK:
-      typeCheck(t->attr.cmpdStmt.local_decl);
-      typeCheck(t->attr.cmpdStmt.stmt_list);
-      break;
-
-    case SelectionStatementK:
-      if (typeCheck(t->attr.selectStmt.expr) != IntT)
+        case ReturnStatementK:
         {
-          // error
-          // TODO: error print
+          if(t->attr.retStmt.retType != IntT
+             || t->attr.retStmt.retType != VoidT)
+            {
+              DONT_OCCUR_PRINT;
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              NodeType type = typeCheck(t->attr.retStmt.expr);
+              if(type != t->attr.retStmt.retType)
+                {
+                  printError(t, "Type", "Returning expression must match pre-declared function return type.");
+                  t->nodeType = ErrorT;
+                }
+              else
+                {
+                  t->nodeType = NoneT;
+                }
+            }
+        }
+          break;
+
+        case AssignExpressionK:
+        {
+          NodeType exprType = typeCheck(t->attr.assignStmt.expr);
+          NodeType varType = typeCheck(t->attr.assignStmt._var);
+          if (varType != IntT || varType != exprType)
+            {
+              printError(t, "Type", "Assignment and assignee type mismatch");
+              t->nodeType = ErrorT;
+            }
+          else
+            {
+              t->nodeType = varType;
+            }
+        }
+          break;
+
+        case ComparisonExpressionK:
+        {
+          NodeType lType = typeCheck(t->attr.cmpExpr.lexpr);
+          NodeType rType = typeCheck(t->attr.cmpExpr.rexpr);
+          if (lType == IntT && lType == rType)
+            {
+              t->nodeType = IntT;
+            }
+          else
+            {
+              printError(t, "Type", "Comparison between different types.");
+              t->nodeType = ErrorT;
+            }
+        }
+          break;
+
+        case AdditiveExpressionK:
+        {
+          NodeType lType = typeCheck(t->attr.addExpr.lexpr);
+          NodeType rType = typeCheck(t->attr.addExpr.rexpr);
+          if (lType == IntT && lType == rType)
+            {
+              t->nodeType = IntT;
+            }
+          else
+            {
+              printError(t, "Type", "Addition between different types.");
+              t->nodeType = ErrorT;
+            }
+        }
+          break;
+
+        case MultiplicativeExpressionK:
+        {
+          NodeType lType = typeCheck(t->attr.multExpr.lexpr);
+          NodeType rType = typeCheck(t->attr.multExpr.rexpr);
+          if (lType == IntT && lType == rType)
+            {
+              t->nodeType = IntT;
+            }
+          else
+            {
+              printError(t, "Type", "Multiplication between different types.");
+              t->nodeType = ErrorT;
+            }
+        }
+          break;
+
+        case ArrayK:
+        {
+          int isError = FALSE;
+          if (typeCheck(t->attr.arr._id) != IntArrayT)
+            {
+              // TODO: error print
+              t->nodeType = ErrorT;
+              isError = TRUE;
+            }
+          if(typeCheck(t->attr.arr.arr_expr) != IntT)
+            {
+              // TODO: error print
+              t->nodeType = ErrorT;
+              isError = TRUE;
+            }
+
+          if(!isError)
+            {
+              t->nodeType = IntT;
+            }
+        }
+
+        case CallK:
+        {
+          int isError = FALSE;
+          SymbolInfo *info = t->symbolInfo;
+          NodeType fType = typeCheck(t->attr.call._id);
+
+          if (info == NULL)
+            {
+              DONT_OCCUR_PRINT;
+              t->nodeType = ErrorT;
+              isError = TRUE;
+            }
+
+          if (fType != FuncT)
+            {
+              if (fType == IntT || fType == IntArrayT)
+                {
+                  printError(t, "Type", "Variable '%s' is not callable.", t->attr.call._id->attr.ID);
+                }
+              else
+                {
+                  printError(t, "Type", "'%s' is never declared.", t->attr.call._id->attr.ID);
+                }
+              t->nodeType = ErrorT;
+              isError = TRUE;
+            }
+
+          if(!isError)
+            {
+              // Parameter type checking
+              int exprIdx = 0;
+              TreeNode *expr;
+              for(expr = t->attr.call.expr_list;
+                  expr != NULL;
+                  expr = expr->sibling, exprIdx++)
+                {
+                  if(exprIdx >= info->attr.funcInfo.len)
+                    {
+                      printError(t,
+                                 "Type",
+                                 "Too many parameters while calling function '%s'.",
+                                 t->attr.call._id->attr.ID);
+                      isError = TRUE;
+                      break;
+                    }
+                  if(typeCheck(expr) != info->attr.funcInfo.paramTypeList[exprIdx])
+                    {
+                      printError(t,
+                                 "Type",
+                                 "Type mismatch of parameter at %d while calling '%s'.",
+                                 exprIdx + 1,
+                                 t->attr.call._id->attr.ID);
+                      isError = TRUE;
+                    }
+                }
+              if(exprIdx < info->attr.funcInfo.len)
+                {
+                  printError(t,
+                             "Type",
+                             "Too little parameters while calling function '%s'.",
+                             t->attr.call._id->attr.ID);
+                  isError = TRUE;
+                  break;
+                }
+            }
+
+          if(!isError)
+            {
+              t->nodeType = info->attr.funcInfo.retType;
+            }
+
+        }
+          break;
+
+        case VariableK:
+          /* TODO: get variable's type from st_lookup.
+           * we have to modify st_lookup for getting variable's type.
+           * */
           t->nodeType = ErrorT;
-        }
-      else
-        {
-          typeCheck(t->attr.selectStmt.if_stmt);
-          typeCheck(t->attr.selectStmt.else_stmt);
-        }
-      break;
+          break;
 
-    case IterationStatementK:
-      if (typeCheck(t->attr.iterStmt.expr) != IntT)
-        {
-          // error
-          // TODO: error print
-          t->nodeType = ErrorT;
-        }
-      else
-        {
-          typeCheck(t->attr.iterStmt.loop_stmt);
-        }
-      break;
-
-    case ReturnStatementK:
-      typeCheck(t->attr.retStmt.expr);
-      t->nodeType = NoneT;
-      break;
-
-      // TODO: check for each expression
-    case AssignExpressionK:
-    {
-      NodeType exprType = typeCheck(t->attr.assignStmt.expr);
-      NodeType varType = typeCheck(t->attr.assignStmt._var);
-      if (varType != IntT || varType != exprType)
-        {
-          // error
-          // TODO: error print
-          t->nodeType = ErrorT;
-        }
-      else
-        {
-          // TODO: review
-          t->nodeType = varType;
-        }
-    }
-      break;
-    case ComparisonExpressionK:
-    {
-      NodeType lType = typeCheck(t->attr.cmpExpr.lexpr);
-      NodeType rType = typeCheck(t->attr.cmpExpr.rexpr);
-      if (lType == IntT && lType == rType)
-        {
+        case ConstantK:
           t->nodeType = IntT;
-        }
-      else
-        {
-          // error
-          // TODO: error print
-          t->nodeType = ErrorT;
+          break;
+        case TokenTypeK:
+          t->nodeType = NoneT;
+          break;
+
+        case ErrorK:
+          DONT_OCCUR_PRINT;
+        default:
+          DONT_OCCUR_PRINT;
+          break;
         }
     }
-      break;
-    case AdditiveExpressionK:
-    {
-      NodeType lType = typeCheck(t->attr.addExpr.lexpr);
-      NodeType rType = typeCheck(t->attr.addExpr.rexpr);
-      if (lType == IntT && lType == rType)
-        {
-          t->nodeType = IntT;
-        }
-      else
-        {
-          // error
-          // TODO: error print
-          t->nodeType = ErrorT;
-        }
-    }
-      break;
-    case MultiplicativeExpressionK:
-    {
-      NodeType lType = typeCheck(t->attr.multExpr.lexpr);
-      NodeType rType = typeCheck(t->attr.multExpr.rexpr);
-      if (lType == IntT && lType == rType)
-        {
-          t->nodeType = IntT;
-        }
-      else
-        {
-          // error
-          // TODO: error print
-          t->nodeType = ErrorT;
-        }
-    }
-      break;
 
-    case ArrayK:
-      if (typeCheck(t->attr.arr._id) != IntArrayT)
-        {
-          // error
-          // TODO: error print
-          t->nodeType = ErrorT;
-        }
-      else
-        {
-          t->nodeType = IntT;
-        }
-      typeCheck(t->attr.arr.arr_expr);
-    case CallK:
-    {
-      NodeType fType = typeCheck(t->attr.call._id);
-
-      if (fType != FuncT)
-        {
-          // error
-          // TODO: error print
-          t->nodeType = ErrorT;
-        }
-      else
-        {
-          /* TODO: how we can get function return type? */
-          t->nodeType = ErrorT;
-        }
-      typeCheck(t->attr.call.expr_list);
-    }
-      break;
-      
-    case VariableK:
-      /* TODO: get variable's type from st_lookup.
-       * we have to modify st_lookup for getting variable's type.
-       * */
-      t->nodeType = ErrorT;
-      break;
-
-    case ConstantK:
-      t->nodeType = IntT;
-      break;
-    case TokenTypeK:
-      t->nodeType = NoneT;
-      break;
-
-    case ErrorK:
-      DONT_OCCUR_PRINT;
-    default:
-      DONT_OCCUR_PRINT;
-      break;
-    }
-
-  // Recursion
-  typeCheck(t->sibling);
+  return n->nodeType;
 }
