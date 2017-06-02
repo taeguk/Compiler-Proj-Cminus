@@ -156,9 +156,9 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
       default:
         DONT_OCCUR_PRINT;
         free(symbolInfo);
+        //symbolInfo = NULL;
         break;
     }
-
 
   return symbolInfo;
 }
@@ -207,28 +207,31 @@ static void insertNode( TreeNode * t, int flags)
   int registerSuccess;
   for (; t; t = t->sibling)
     {
-      SymbolInfo * symbolInfo = setSymbolInfo(t);
+      SymbolInfo * symbolInfo = NULL;
+      //SymbolInfo * symbolInfo = setSymbolInfo(t);
       switch (t->nodeKind)
         {
           /* Declaration Kinds */
         case VariableDeclarationK:
           symbolInfo = setSymbolInfo(t);
-          if(symbolInfo == NULL) break;
+          //if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.varDecl._id, symbolInfo);
           if(!registerSuccess) t->nodeType = ErrorT;
+          break;
         case ArrayDeclarationK:
           symbolInfo = setSymbolInfo(t);
-          if(symbolInfo == NULL) break;
+          //if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.arrDecl._id, symbolInfo);
           if(!registerSuccess) t->nodeType = ErrorT;
+          break;
         case FunctionDeclarationK:
           symbolInfo = setSymbolInfo(t);
-          if(symbolInfo == NULL) break;
+          //if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.funcDecl._id, symbolInfo);
           if(!registerSuccess)
             {
               t->nodeType = ErrorT;
-              break;
+              //break; // TODO: review
             }
           st_push_scope();
           insertNode(t->attr.funcDecl.params, 0);
@@ -238,13 +241,13 @@ static void insertNode( TreeNode * t, int flags)
           /* Parameter Kinds */
         case VariableParameterK:
           symbolInfo = setSymbolInfo(t);
-          if(symbolInfo == NULL) break;
+          //if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.varParam._id, symbolInfo);
           if(!registerSuccess) t->nodeType = ErrorT;
           break;
         case ArrayParameterK:
           symbolInfo = setSymbolInfo(t);
-          if(symbolInfo == NULL) break;
+          //if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.arrParam._id, symbolInfo);
           if(!registerSuccess) t->nodeType = ErrorT;
           break;
