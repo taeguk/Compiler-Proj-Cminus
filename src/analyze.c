@@ -672,7 +672,6 @@ NodeType typeCheck(TreeNode *n)
                   NodeType aa;
                   if((aa=typeCheck(expr)) != info->attr.funcInfo.paramTypeList[exprIdx])
                     {
-                      printf("[Debug] %d -- %d(%d vs %d), %d\n", exprIdx, aa, expr->nodeKind, ConstantK, info->attr.funcInfo.paramTypeList[exprIdx]);
                       printError(t,
                                  "Type",
                                  "Type mismatch of parameter at %d while calling '%s'.",
