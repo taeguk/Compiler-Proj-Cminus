@@ -8,5 +8,5 @@ void main (void)
   int a;
   int arr[23];
 
-  helloworld(); // fail
+  helloworld();
 }

@@ -1,3 +1,3 @@
-void main(int argv) // error
+void main(int argv)
 {
 }
