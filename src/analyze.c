@@ -663,8 +663,10 @@ NodeType typeCheck(TreeNode *n)
                       isError = TRUE;
                       break;
                     }
-                  if(typeCheck(expr) != info->attr.funcInfo.paramTypeList[exprIdx])
+                  //NodeType aa;
+                  if((/*aa=*/typeCheck(expr)) != info->attr.funcInfo.paramTypeList[exprIdx])
                     {
+                      //printf("[Debug] %d -- %d(%d vs %d), %d\n", exprIdx, aa, expr->nodeKind, ConstantK, info->attr.funcInfo.paramTypeList[exprIdx]);
                       printError(t,
                                  "Type",
                                  "Type mismatch of parameter at %d while calling '%s'.",
@@ -695,7 +697,7 @@ NodeType typeCheck(TreeNode *n)
           /* TODO: get variable's type from st_lookup.
            * we have to modify st_lookup for getting variable's type.
            * */
-          t->nodeType = ErrorT;
+          //t->nodeType = ;
           break;
 
         case ConstantK:
