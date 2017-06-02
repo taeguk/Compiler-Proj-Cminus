@@ -204,31 +204,33 @@ static void referSymbol(TreeNode *reg_node, TreeNode *idNode)
 
 static void insertNode( TreeNode * t, int flags)
 {
-  int registerSuccess;
   for (; t; t = t->sibling)
     {
       SymbolInfo * symbolInfo = NULL;
-      //SymbolInfo * symbolInfo = setSymbolInfo(t);
+      int registerSuccess = 0;
+
       switch (t->nodeKind)
         {
           /* Declaration Kinds */
         case VariableDeclarationK:
           symbolInfo = setSymbolInfo(t);
-          //if(symbolInfo == NULL) break;
-          registerSuccess = registerSymbol(t, t->attr.varDecl._id, symbolInfo);
-          if(!registerSuccess) t->nodeType = ErrorT;
+          if(symbolInfo)
+            registerSuccess = registerSymbol(t, t->attr.varDecl._id, symbolInfo);
+          if(!registerSuccess || !symbolInfo) 
+            t->nodeType = ErrorT;
           break;
         case ArrayDeclarationK:
           symbolInfo = setSymbolInfo(t);
-          //if(symbolInfo == NULL) break;
-          registerSuccess = registerSymbol(t, t->attr.arrDecl._id, symbolInfo);
-          if(!registerSuccess) t->nodeType = ErrorT;
+          if(symbolInfo)
+            registerSuccess = registerSymbol(t, t->attr.arrDecl._id, symbolInfo);
+          if(!registerSuccess || !symbolInfo) 
+            t->nodeType = ErrorT;
           break;
         case FunctionDeclarationK:
           symbolInfo = setSymbolInfo(t);
-          //if(symbolInfo == NULL) break;
-          registerSuccess = registerSymbol(t, t->attr.funcDecl._id, symbolInfo);
-          if(!registerSuccess)
+          if(symbolInfo)
+            registerSuccess = registerSymbol(t, t->attr.funcDecl._id, symbolInfo);
+          if(!registerSuccess || !symbolInfo)
             {
               t->nodeType = ErrorT;
               //break; // TODO: review
@@ -241,15 +243,17 @@ static void insertNode( TreeNode * t, int flags)
           /* Parameter Kinds */
         case VariableParameterK:
           symbolInfo = setSymbolInfo(t);
-          //if(symbolInfo == NULL) break;
-          registerSuccess = registerSymbol(t, t->attr.varParam._id, symbolInfo);
-          if(!registerSuccess) t->nodeType = ErrorT;
+          if(symbolInfo)
+            registerSuccess = registerSymbol(t, t->attr.varParam._id, symbolInfo);
+          if(!registerSuccess || !symbolInfo)
+            t->nodeType = ErrorT;
           break;
         case ArrayParameterK:
           symbolInfo = setSymbolInfo(t);
-          //if(symbolInfo == NULL) break;
-          registerSuccess = registerSymbol(t, t->attr.arrParam._id, symbolInfo);
-          if(!registerSuccess) t->nodeType = ErrorT;
+          if(symbolInfo)
+            registerSuccess = registerSymbol(t, t->attr.arrParam._id, symbolInfo);
+          if(!registerSuccess || !symbolInfo)
+            t->nodeType = ErrorT;
           break;
 
           /* Statement Kinds */
