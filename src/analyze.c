@@ -97,7 +97,6 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
         n_param = 0;
         trace = t->attr.funcDecl.params;
 
-        // TODO: Parameter == 0 check, Void check
         while (trace)
           {
             ++ n_param;
@@ -131,6 +130,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
           }
 
         symbolInfo->attr.funcInfo.paramTypeList = newParamList;
+        symbolInfo->attr.funcInfo.len = n_param;
         break;
 
 
@@ -331,6 +331,33 @@ static void insertNode( TreeNode * t, int flags)
     }
 }
 
+static void mainCheck(TreeNode *t)
+{
+  if(t == NULL)
+    {
+      printError(t, "Main", "There is no main function.");
+      return;
+    }
+  for(; t->sibling; t=t->sibling);
+  if(t->nodeKind != FunctionDeclarationK
+     || strcmp(t->attr.funcDecl._id->attr.ID, "main") != 0)
+    {
+      printError(t, "Main", "Main function must be declared at the very last of program.");
+      return;
+    }
+
+  if(t->attr.funcDecl.type_spec->attr.TOK != VOID)
+    {
+      printError(t, "Type", "Main function must be type void");
+      return;
+    }
+  if(t->attr.funcDecl.params != NULL)
+    {
+      printError(t, "Main", "Main function cannot have parameter.");
+      return;
+    }
+}
+
 /* Function buildSymtab constructs the symbol 
  * table by preorder traversal of the syntax tree
  */
@@ -339,6 +366,7 @@ void buildSymtab(TreeNode * syntaxTree)
   insertNode(syntaxTree, 0);
   printSymTab(listing);
   typeCheck(syntaxTree);
+  mainCheck(syntaxTree);
   /*
   if (TraceAnalyze)
   { fprintf(listing,"\nSymbol table:\n\n");
@@ -512,13 +540,10 @@ NodeType typeCheck(TreeNode *n)
           NodeType varType = typeCheck(t->attr.assignStmt._var);
           if (varType != IntT || varType != exprType)
             {
-              printError(t, "Type", "Assignment and assignee type mismatch");
-              t->nodeType = ErrorT;
+              if(varType != ErrorT && exprType != ErrorT)
+                printError(t, "Type", "Assignment and assignee type mismatch");
             }
-          else
-            {
-              t->nodeType = varType;
-            }
+          t->nodeType = varType;
         }
           break;
 
@@ -591,6 +616,7 @@ NodeType typeCheck(TreeNode *n)
               t->nodeType = IntT;
             }
         }
+          break;
 
         case CallK:
         {

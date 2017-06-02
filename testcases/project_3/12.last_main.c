@@ -1,13 +1,13 @@
 void func(void) {}
 
-void main()
+void main(void)
 {
   int a;
 }
 
-void func2(void) // error
+void funcTwo(void)
 {}
-int func2(void) // error
+int funcThree(void)
 {}
-void func2(int a, int arr[2])
+void funcFour(int a, int arr[])
 {}
