@@ -328,6 +328,33 @@ static void insertNode( TreeNode * t, int flags)
     }
 }
 
+static void mainCheck(TreeNode *t)
+{
+  if(t == NULL)
+    {
+      printError(t, "Main", "There is no main function.");
+      return;
+    }
+  for(; t->sibling; t=t->sibling);
+  if(t->nodeKind != FunctionDeclarationK
+     || strcmp(t->attr.funcDecl._id->attr.ID, "main") != 0)
+    {
+      printError(t, "Main", "Main function must be declared at the very last of program.");
+      return;
+    }
+
+  if(t->attr.funcDecl.type_spec->attr.TOK != VOID)
+    {
+      printError(t, "Type", "Main function must be type void");
+      return;
+    }
+  if(t->symbolInfo->attr.funcInfo.len != 0)
+    {
+      printError(t, "Main", "Main function cannot have parameter.");
+      return;
+    }
+}
+
 /* Function buildSymtab constructs the symbol 
  * table by preorder traversal of the syntax tree
  */
@@ -336,6 +363,7 @@ void buildSymtab(TreeNode * syntaxTree)
   insertNode(syntaxTree, 0);
   printSymTab(listing);
   typeCheck(syntaxTree);
+  mainCheck(syntaxTree);
   /*
   if (TraceAnalyze)
   { fprintf(listing,"\nSymbol table:\n\n");
