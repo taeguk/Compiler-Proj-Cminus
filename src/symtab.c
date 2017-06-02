@@ -73,6 +73,7 @@ int st_pop_scope(void)
           // TODO: print some infomations.
           free(tmp);
         }
+      hashTable[h] = l;
     }
 
   valid_hash_arr_cnt = valid_hash_arr_base[cur_scope_level--];
