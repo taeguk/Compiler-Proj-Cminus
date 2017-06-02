@@ -131,6 +131,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
           }
 
         symbolInfo->attr.funcInfo.paramTypeList = newParamList;
+        symbolInfo->attr.funcInfo.len = n_param;
         break;
 
 
@@ -508,13 +509,10 @@ NodeType typeCheck(TreeNode *n)
           NodeType varType = typeCheck(t->attr.assignStmt._var);
           if (varType != IntT || varType != exprType)
             {
-              printError(t, "Type", "Assignment and assignee type mismatch");
-              t->nodeType = ErrorT;
+              if(varType != ErrorT && exprType != ErrorT)
+                printError(t, "Type", "Assignment and assignee type mismatch");
             }
-          else
-            {
-              t->nodeType = varType;
-            }
+          t->nodeType = varType;
         }
           break;
 
@@ -587,6 +585,7 @@ NodeType typeCheck(TreeNode *n)
               t->nodeType = IntT;
             }
         }
+          break;
 
         case CallK:
         {
