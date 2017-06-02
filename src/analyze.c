@@ -117,10 +117,16 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
               newParamList[i] =
                 tokenToNodeType(trace->attr.varParam.type_spec->attr.TOK); // Is it need type check?
             else if (trace->nodeKind == ArrayParameterK)
-              newParamList[i] =
-                tokenToNodeType(trace->attr.arrParam.type_spec->attr.TOK);
+              {
+                newParamList[i] =
+                  tokenToNodeType(trace->attr.arrParam.type_spec->attr.TOK);
+                if (newParamList[i] != IntT)
+                  goto FUCK;
+                newParamList[i] = IntArrayT;
+              }
             else
               {
+FUCK:
                 DONT_OCCUR_PRINT; // TODO: check is it really "DON'T occur"
                 return NULL;
               }
@@ -663,10 +669,10 @@ NodeType typeCheck(TreeNode *n)
                       isError = TRUE;
                       break;
                     }
-                  //NodeType aa;
-                  if((/*aa=*/typeCheck(expr)) != info->attr.funcInfo.paramTypeList[exprIdx])
+                  NodeType aa;
+                  if((aa=typeCheck(expr)) != info->attr.funcInfo.paramTypeList[exprIdx])
                     {
-                      //printf("[Debug] %d -- %d(%d vs %d), %d\n", exprIdx, aa, expr->nodeKind, ConstantK, info->attr.funcInfo.paramTypeList[exprIdx]);
+                      printf("[Debug] %d -- %d(%d vs %d), %d\n", exprIdx, aa, expr->nodeKind, ConstantK, info->attr.funcInfo.paramTypeList[exprIdx]);
                       printError(t,
                                  "Type",
                                  "Type mismatch of parameter at %d while calling '%s'.",
