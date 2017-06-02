@@ -51,6 +51,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
   if ((symbolInfo = malloc(sizeof(*symbolInfo)) ) == NULL)
     {
       // Error
+      // TODO: User friendly error message
       DONT_OCCUR_PRINT;
       return NULL;
     }
@@ -102,6 +103,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             ++ n_param;
             trace = trace->sibling;
           }
+
         if ((newParamList = malloc(n_param * sizeof(NodeType))) == NULL)
           {
             DONT_OCCUR_PRINT;
@@ -149,6 +151,11 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             return NULL;
           }
         symbolInfo->nodeType = IntArrayT;
+        break;
+
+      default:
+        DONT_OCCUR_PRINT;
+        free(symbolInfo);
         break;
     }
 
@@ -205,16 +212,24 @@ static void insertNode( TreeNode * t, int flags)
         {
           /* Declaration Kinds */
         case VariableDeclarationK:
+          symbolInfo = setSymbolInfo(t);
           if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.varDecl._id, symbolInfo);
-          break;
+          if(!registerSuccess) t->nodeType = ErrorT;
         case ArrayDeclarationK:
+          symbolInfo = setSymbolInfo(t);
           if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.arrDecl._id, symbolInfo);
-          break;
+          if(!registerSuccess) t->nodeType = ErrorT;
         case FunctionDeclarationK:
+          symbolInfo = setSymbolInfo(t);
           if(symbolInfo == NULL) break;
           registerSuccess = registerSymbol(t, t->attr.funcDecl._id, symbolInfo);
+          if(!registerSuccess)
+            {
+              t->nodeType = ErrorT;
+              break;
+            }
           st_push_scope();
           insertNode(t->attr.funcDecl.params, 0);
           insertNode(t->attr.funcDecl.cmpd_stmt, AlreadyPushedScope);
@@ -222,12 +237,16 @@ static void insertNode( TreeNode * t, int flags)
 
           /* Parameter Kinds */
         case VariableParameterK:
+          symbolInfo = setSymbolInfo(t);
           if(symbolInfo == NULL) break;
-          registerSymbol(t, t->attr.varParam._id, symbolInfo);
+          registerSuccess = registerSymbol(t, t->attr.varParam._id, symbolInfo);
+          if(!registerSuccess) t->nodeType = ErrorT;
           break;
         case ArrayParameterK:
+          symbolInfo = setSymbolInfo(t);
           if(symbolInfo == NULL) break;
-          registerSymbol(t, t->attr.arrParam._id, symbolInfo);
+          registerSuccess = registerSymbol(t, t->attr.arrParam._id, symbolInfo);
+          if(!registerSuccess) t->nodeType = ErrorT;
           break;
 
           /* Statement Kinds */
@@ -549,13 +568,13 @@ NodeType typeCheck(TreeNode *n)
           int isError = FALSE;
           if (typeCheck(t->attr.arr._id) != IntArrayT)
             {
-              // TODO: error print
+              printError(t, "Type", "Variable '%s' is not subscriptable.", t->attr.arr._id->attr.ID);
               t->nodeType = ErrorT;
               isError = TRUE;
             }
           if(typeCheck(t->attr.arr.arr_expr) != IntT)
             {
-              // TODO: error print
+              printError(t, "Type", "Array subscript must be type 'int'.", t->attr.arr._id->attr.ID);
               t->nodeType = ErrorT;
               isError = TRUE;
             }
@@ -572,13 +591,6 @@ NodeType typeCheck(TreeNode *n)
           SymbolInfo *info = t->attr.call._id->symbolInfo;
           NodeType fType = typeCheck(t->attr.call._id);
 
-          // TODO: print out error. note that undeclared function's info == NULL.
-          if (info == NULL)
-            {
-              t->nodeType = ErrorT;
-              isError = TRUE;
-            }
-
           if (fType != FuncT)
             {
               if (fType == IntT || fType == IntArrayT)
@@ -591,6 +603,13 @@ NodeType typeCheck(TreeNode *n)
                 }
               t->nodeType = ErrorT;
               isError = TRUE;
+            }
+
+          if (!isError && info == NULL)
+            {
+              t->nodeType = ErrorT;
+              isError = TRUE;
+              DONT_OCCUR_PRINT;
             }
 
           if(!isError)
