@@ -90,11 +90,13 @@ void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
 {
   int h = hash(name);
   BucketList l =  hashTable[h];
-  while ((l != NULL) && (l->scope_level == cur_scope_level) && 
+
+  while ((l != NULL) && (l->scope_level == cur_scope_level || info == NULL) && 
          (strcmp(name,l->name) != 0))
     l = l->next;
-  if (l == NULL || l->scope_level < cur_scope_level) /* variable not yet in current scope. */
-  { l = (BucketList) malloc(sizeof(struct BucketListRec));
+  if (info != NULL && (l == NULL || l->scope_level < cur_scope_level)) /* variable not yet in current scope. */
+  { 
+    l = (BucketList) malloc(sizeof(struct BucketListRec));
     l->name = name;
     l->lines = (LineList) malloc(sizeof(struct LineListRec));
     l->lines->lineno = lineno;
@@ -123,7 +125,9 @@ SymbolInfo* st_lookup ( char * name, int * is_cur_scope /* 0 or 1 */ )
   BucketList l =  hashTable[h];
 
   while ((l != NULL) && (strcmp(name,l->name) != 0))
-    l = l->next;
+    {
+      l = l->next;
+    }
 
   if (l != NULL)
     {
