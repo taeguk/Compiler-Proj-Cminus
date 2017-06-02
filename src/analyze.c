@@ -97,7 +97,6 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
         n_param = 0;
         trace = t->attr.funcDecl.params;
 
-        // TODO: Parameter == 0 check, Void check
         while (trace)
           {
             ++ n_param;
@@ -348,7 +347,7 @@ static void mainCheck(TreeNode *t)
       printError(t, "Type", "Main function must be type void");
       return;
     }
-  if(t->symbolInfo->attr.funcInfo.len != 0)
+  if(t->attr.funcDecl.params != NULL)
     {
       printError(t, "Main", "Main function cannot have parameter.");
       return;
