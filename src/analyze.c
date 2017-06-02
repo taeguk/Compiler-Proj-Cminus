@@ -103,6 +103,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             ++ n_param;
             trace = trace->sibling;
           }
+
         if ((newParamList = malloc(n_param * sizeof(NodeType))) == NULL)
           {
             DONT_OCCUR_PRINT;
@@ -566,13 +567,13 @@ NodeType typeCheck(TreeNode *n)
           int isError = FALSE;
           if (typeCheck(t->attr.arr._id) != IntArrayT)
             {
-              // TODO: error print
+              printError(t, "Type", "Variable '%s' is not subscriptable.", t->attr.arr._id->attr.ID);
               t->nodeType = ErrorT;
               isError = TRUE;
             }
           if(typeCheck(t->attr.arr.arr_expr) != IntT)
             {
-              // TODO: error print
+              printError(t, "Type", "Array subscript must be type 'int'.", t->attr.arr._id->attr.ID);
               t->nodeType = ErrorT;
               isError = TRUE;
             }
@@ -589,13 +590,6 @@ NodeType typeCheck(TreeNode *n)
           SymbolInfo *info = t->symbolInfo;
           NodeType fType = typeCheck(t->attr.call._id);
 
-          // TODO: print out error. note that undeclared function's info == NULL.
-          if (info == NULL)
-            {
-              t->nodeType = ErrorT;
-              isError = TRUE;
-            }
-
           if (fType != FuncT)
             {
               if (fType == IntT || fType == IntArrayT)
@@ -608,6 +602,13 @@ NodeType typeCheck(TreeNode *n)
                 }
               t->nodeType = ErrorT;
               isError = TRUE;
+            }
+
+          if (!isError && info == NULL)
+            {
+              t->nodeType = ErrorT;
+              isError = TRUE;
+              DONT_OCCUR_PRINT;
             }
 
           if(!isError)
