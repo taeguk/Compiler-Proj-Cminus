@@ -198,9 +198,9 @@ static void referSymbol(TreeNode *reg_node, TreeNode *idNode)
 static void insertNode( TreeNode * t, int flags)
 {
   int registerSuccess;
-  SymbolInfo * symbolInfo = setSymbolInfo(t);
   for (; t; t = t->sibling)
     {
+      SymbolInfo * symbolInfo = setSymbolInfo(t);
       switch (t->nodeKind)
         {
           /* Declaration Kinds */
@@ -363,9 +363,9 @@ NodeType typeCheck(TreeNode *n)
           TreeNode *cmpdStmt = t->attr.funcDecl.cmpd_stmt;
           if(cmpdStmt != NULL)
             {
-              if(t->attr.arrDecl.type_spec->attr.TOK != INT)
+              if(t->attr.arrDecl.type_spec->attr.TOK == INT)
                 cmpdStmt->attr.cmpdStmt.retType = IntT;
-              else if(t->attr.arrDecl.type_spec->attr.TOK != VOID)
+              else if(t->attr.arrDecl.type_spec->attr.TOK == VOID)
                 cmpdStmt->attr.cmpdStmt.retType = VoidT;
               else
                 DONT_OCCUR_PRINT;
@@ -413,6 +413,7 @@ NodeType typeCheck(TreeNode *n)
                 }
               if(stmt->nodeKind == CompoundStatementK)
                 {
+                  //TODO: need to compare equalness.
                   stmt->attr.cmpdStmt.retType = t->attr.cmpdStmt.retType;
                 }
             }
@@ -568,7 +569,7 @@ NodeType typeCheck(TreeNode *n)
         case CallK:
         {
           int isError = FALSE;
-          SymbolInfo *info = t->symbolInfo;
+          SymbolInfo *info = t->attr.call._id->symbolInfo;
           NodeType fType = typeCheck(t->attr.call._id);
 
           // TODO: print out error. note that undeclared function's info == NULL.
@@ -635,7 +636,6 @@ NodeType typeCheck(TreeNode *n)
             {
               t->nodeType = info->attr.funcInfo.retType;
             }
-
         }
           break;
 
