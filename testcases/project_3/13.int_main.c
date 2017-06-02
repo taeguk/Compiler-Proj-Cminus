@@ -1,4 +1,4 @@
-int main(void) // error
+int main(void)
 {
   return 0;
 }

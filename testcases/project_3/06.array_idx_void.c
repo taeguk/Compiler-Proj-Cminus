@@ -9,6 +9,6 @@ void main(void)
   int arr[2];
   a = 1;
 
-  arr[a] = 3; // pass
-  arr[helloworld(a)] = 3; // fail, An array index must be int type
+  arr[a] = 3;
+  arr[helloworld(a)] = 3;
 }
