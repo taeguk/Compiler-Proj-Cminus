@@ -669,8 +669,7 @@ NodeType typeCheck(TreeNode *n)
                       isError = TRUE;
                       break;
                     }
-                  NodeType aa;
-                  if((aa=typeCheck(expr)) != info->attr.funcInfo.paramTypeList[exprIdx])
+                  if(typeCheck(expr) != info->attr.funcInfo.paramTypeList[exprIdx])
                     {
                       printError(t,
                                  "Type",
