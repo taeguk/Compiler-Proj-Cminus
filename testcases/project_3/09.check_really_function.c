@@ -1,6 +1,6 @@
-void func1(int a) {}
-int func2(void) {}
-int func3(int aa[]) {}
+void funcOne(int a) {}
+int funcTwo(void) {}
+int funcThree(int aa[]) {}
 
 
 void main (void)
