@@ -95,10 +95,10 @@ void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
          (strcmp(name,l->name) != 0))
     l = l->next;
   if (info != NULL && (l == NULL || l->scope_level < cur_scope_level)) /* variable not yet in current scope. */
-  { 
-    l = (BucketList) malloc(sizeof(struct BucketListRec));
+  {
+    MALLOC(l, sizeof(struct BucketListRec));
     l->name = name;
-    l->lines = (LineList) malloc(sizeof(struct LineListRec));
+    MALLOC(l->lines, sizeof(struct LineListRec));
     l->lines->lineno = lineno;
     l->tree_node = node;
     l->symbolInfo = info;
@@ -110,7 +110,7 @@ void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
   else /* found in table, so just add line number */
   { LineList t = l->lines;
     while (t->next != NULL) t = t->next;
-    t->next = (LineList) malloc(sizeof(struct LineListRec));
+    MALLOC(t->next, sizeof(struct LineListRec));
     t->next->lineno = lineno;
     t->next->next = NULL;
   }
