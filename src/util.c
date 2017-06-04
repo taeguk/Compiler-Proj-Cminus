@@ -178,14 +178,14 @@ allocateTreeNode(void)
 
 TreeNode*
 newVariableDeclarationNode(TreeNode *type_specifier,
-                           TreeNode *_id)
+                           TreeNode *_var)
 {
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
       t->nodeKind = VariableDeclarationK;
       t->attr.varDecl.type_spec = type_specifier;
-      t->attr.varDecl._id = _id;
+      t->attr.varDecl._var = _var;
     }
 
   return t;
@@ -193,7 +193,7 @@ newVariableDeclarationNode(TreeNode *type_specifier,
 
 TreeNode*
 newArrayDeclarationNode(TreeNode *type_specifier,
-                        TreeNode *_id,
+                        TreeNode *_var,
                         TreeNode *_num)
 {
   TreeNode * t = allocateTreeNode();
@@ -201,7 +201,7 @@ newArrayDeclarationNode(TreeNode *type_specifier,
     {
       t->nodeKind = ArrayDeclarationK;
       t->attr.arrDecl.type_spec = type_specifier;
-      t->attr.arrDecl._id = _id;
+      t->attr.arrDecl._var = _var;
       t->attr.arrDecl._num = _num;
 
     }
@@ -211,7 +211,7 @@ newArrayDeclarationNode(TreeNode *type_specifier,
 
 TreeNode*
 newFunctionDeclarationNode(TreeNode *type_specifier,
-                           TreeNode *_id,
+                           TreeNode *_var,
                            TreeNode *params,
                            TreeNode *compound_stmt)
 {
@@ -220,7 +220,7 @@ newFunctionDeclarationNode(TreeNode *type_specifier,
     {
       t->nodeKind = FunctionDeclarationK;
       t->attr.funcDecl.type_spec = type_specifier;
-      t->attr.funcDecl._id = _id;
+      t->attr.funcDecl._var = _var;
       t->attr.funcDecl.params = params;
       t->attr.funcDecl.cmpd_stmt = compound_stmt;
     }
@@ -230,14 +230,14 @@ newFunctionDeclarationNode(TreeNode *type_specifier,
 
 TreeNode*
 newVariableParameterNode(TreeNode *type_specifier,
-                         TreeNode *_id)
+                         TreeNode *_var)
 {
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
       t->nodeKind = VariableParameterK;
       t->attr.varParam.type_spec = type_specifier;
-      t->attr.varParam._id = _id;
+      t->attr.varParam._var = _var;
     }
 
   return t;
@@ -245,14 +245,14 @@ newVariableParameterNode(TreeNode *type_specifier,
 
 TreeNode*
 newArrayParameterNode(TreeNode *type_specifier,
-                      TreeNode *_id)
+                      TreeNode *_var)
 {
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
       t->nodeKind = ArrayParameterK;
       t->attr.arrParam.type_spec = type_specifier;
-      t->attr.arrParam._id = _id;
+      t->attr.arrParam._var = _var;
     }
 
   return t;
@@ -398,14 +398,14 @@ newMultiplicativeExpressionNode(TreeNode *left_expression,
 }
 
 TreeNode *
-newArrayNode(TreeNode *_id,
+newArrayNode(TreeNode *_var,
              TreeNode *expression)
 {
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
       t->nodeKind = ArrayK;
-      t->attr.arr._id = _id;
+      t->attr.arr._var = _var;
       t->attr.arr.arr_expr = expression;
     }
 
@@ -413,14 +413,14 @@ newArrayNode(TreeNode *_id,
 }
 
 TreeNode*
-newCallNode(TreeNode *_id,
+newCallNode(TreeNode *_var,
             TreeNode *args) // nullable
 {
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
       t->nodeKind = CallK;
-      t->attr.call._id = _id;
+      t->attr.call._var = _var;
       t->attr.call.expr_list = args;
     }
 
@@ -476,17 +476,8 @@ copyString(char * s)
   char * t;
   if (s==NULL) return NULL;
   n = strlen(s)+1;
-  t = malloc(n);
-  if (t==NULL)
-    {
-      fprintf(listing,
-              "Out of memory error at line %d\n",
-              lineno);
-    }
-  else 
-    {
-      strcpy(t,s);
-    }
+  MALLOC(t, n);
+  strcpy(t,s);
   return t;
 }
 
@@ -554,20 +545,20 @@ printTree(TreeNode* tree)
         case VariableDeclarationK:
           PRINTDESC("Variable Declaration\n");
           printTree(tree->attr.varDecl.type_spec);
-          printTree(tree->attr.varDecl._id);
+          printTree(tree->attr.varDecl._var);
           break;
 
         case ArrayDeclarationK:
           PRINTDESC("Array Declaration\n");
           printTree(tree->attr.arrDecl.type_spec);
-          printTree(tree->attr.arrDecl._id);
+          printTree(tree->attr.arrDecl._var);
           printTree(tree->attr.arrDecl._num);
           break;
 
         case FunctionDeclarationK:
           PRINTDESC("Function Declaration\n");
           printTree(tree->attr.funcDecl.type_spec);
-          printTree(tree->attr.funcDecl._id);
+          printTree(tree->attr.funcDecl._var);
           PRINTDESC("> Parameters :\n");
           printTree(tree->attr.funcDecl.params);
           PRINTDESC("> Function Block :\n");
@@ -577,13 +568,13 @@ printTree(TreeNode* tree)
         case VariableParameterK:
           PRINTDESC("Parameter (Variable)\n");
           printTree(tree->attr.varParam.type_spec);
-          printTree(tree->attr.varParam._id);
+          printTree(tree->attr.varParam._var);
           break;
 
         case ArrayParameterK:
           PRINTDESC("Parameter (Array)\n");
           printTree(tree->attr.arrParam.type_spec);
-          printTree(tree->attr.arrParam._id);
+          printTree(tree->attr.arrParam._var);
           break;
 
         case CompoundStatementK:
@@ -665,14 +656,14 @@ printTree(TreeNode* tree)
 
         case ArrayK:
           PRINTDESC("Array\n");
-          printTree(tree->attr.arr._id);
+          printTree(tree->attr.arr._var);
           PRINTDESC("> Expression inside subscript [*]\n");
           printTree(tree->attr.arr.arr_expr);
           break;
 
         case CallK:
           PRINTDESC("Function Call\n");
-          printTree(tree->attr.call._id);
+          printTree(tree->attr.call._var);
           PRINTDESC("> Function arguments :\n");
           printTree(tree->attr.call.expr_list);
           break;

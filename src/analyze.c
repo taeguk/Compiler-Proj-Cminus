@@ -48,20 +48,14 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
   SymbolInfo * symbolInfo;
 
   if (t == NULL) return NULL;
-  if ((symbolInfo = malloc(sizeof(*symbolInfo)) ) == NULL)
-    {
-      // Error
-      // TODO: User friendly error message
-      DONT_OCCUR_PRINT;
-      return NULL;
-    }
+  MALLOC(symbolInfo, sizeof(*symbolInfo));
 
   switch (t->nodeKind)
     {
       case VariableDeclarationK:
         if (tokenToNodeType(t->attr.varDecl.type_spec->attr.TOK) != IntT)
           {
-            printError(t, "Type", "Variable '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            printError(t, "Type", "Variable '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
           }
         symbolInfo->nodeType = IntT;
@@ -72,7 +66,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
       case ArrayDeclarationK:
         if (tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK) != IntT)
           {
-            printError(t, "Type", "Array '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            printError(t, "Type", "Array '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
           }
         symbolInfo->nodeType = IntArrayT; // TODO: Type check
@@ -91,36 +85,40 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
         symbolInfo->attr.funcInfo.retType =
           tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK);
 
-        TreeNode * trace;
+        TreeNode * param_node;
         NodeType * newParamList;
         int n_param;
         int i;
 
         n_param = 0;
-        trace = t->attr.funcDecl.params;
+        param_node = t->attr.funcDecl.params;
 
-        while (trace)
+        while (param_node)
           {
             ++ n_param;
-            trace = trace->sibling;
+            param_node = param_node->sibling;
           }
 
-        if ((newParamList = malloc(n_param * sizeof(NodeType))) == NULL)
-          {
-            DONT_OCCUR_PRINT;
-            return NULL;
-          }
+        MALLOC(newParamList, n_param * sizeof(NodeType));
 
-        trace = t->attr.funcDecl.params;
+        param_node = t->attr.funcDecl.params;
         i = 0;
-        while (trace)
+        while (param_node)
           {
-            if (trace->nodeKind == VariableParameterK)
+            if (param_node->nodeKind == VariableParameterK)
               newParamList[i] =
-                tokenToNodeType(trace->attr.varParam.type_spec->attr.TOK); // Is it need type check?
-            else if (trace->nodeKind == ArrayParameterK)
-              newParamList[i] =
-                tokenToNodeType(trace->attr.arrParam.type_spec->attr.TOK);
+                tokenToNodeType(param_node->attr.varParam.type_spec->attr.TOK); // Is it need type check?
+            else if (param_node->nodeKind == ArrayParameterK)
+              {
+                newParamList[i] =
+                  tokenToNodeType(param_node->attr.arrParam.type_spec->attr.TOK);
+                if (newParamList[i] != IntT)
+                  {
+                    DONT_OCCUR_PRINT;
+                    return NULL;
+                  }
+                newParamList[i] = IntArrayT;
+              }
             else
               {
                 DONT_OCCUR_PRINT; // TODO: check is it really "DON'T occur"
@@ -128,7 +126,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
               }
 
             ++i;
-            trace = trace->sibling;
+            param_node = param_node->sibling;
           }
 
         symbolInfo->attr.funcInfo.paramTypeList = newParamList;
@@ -139,7 +137,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
       case VariableParameterK:
         if (tokenToNodeType(t->attr.varParam.type_spec->attr.TOK) != IntT)
           {
-            printError(t, "Type", "Variable parameter '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            printError(t, "Type", "Variable parameter '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
           }
         symbolInfo->nodeType = IntT;
@@ -150,7 +148,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
       case ArrayParameterK:
         if (tokenToNodeType(t->attr.arrParam.type_spec->attr.TOK) != IntT)
           {
-            printError(t, "Type", "Array parameter '%s' cannot be void type.", t->attr.varDecl._id->attr.ID);
+            printError(t, "Type", "Array parameter '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
           }
         symbolInfo->nodeType = IntArrayT;
@@ -169,40 +167,41 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
 #define AlreadyPushedScope 2
 
-static int registerSymbol(TreeNode *regNode, TreeNode *idNode, SymbolInfo * symbolInfo)
+static int registerSymbol(TreeNode *regNode, TreeNode *varNode, SymbolInfo * symbolInfo)
 {
   int is_cur_scope;
-  if (st_lookup(idNode->attr.ID, &is_cur_scope) == NULL || !is_cur_scope)
+  if (st_lookup(varNode->attr.ID, &is_cur_scope) == NULL || !is_cur_scope)
     {
       /* not yet in table, so treat as new definition */
-      st_insert(idNode->attr.ID, idNode->lineno, regNode, symbolInfo /* TODO: in project 4 */);
-      idNode->nodeType = symbolInfo->nodeType;
-      idNode->symbolInfo = symbolInfo;
+      st_register(varNode->attr.ID, varNode->lineno, symbolInfo);
+      varNode->nodeType = symbolInfo->nodeType;
+      varNode->symbolInfo = symbolInfo;
       return TRUE;
     }
   else /* redeclaration */
     {
-      printError(idNode, "Declaration", "Redeclaration of symbol \"%s\"", idNode->attr.ID);
-      idNode->nodeType = ErrorT;
+      printError(varNode, "Declaration", "Redeclaration of symbol \"%s\"", varNode->attr.ID);
+      varNode->nodeType = ErrorT;
       return FALSE;
     }
 }
 
-static void referSymbol(TreeNode *reg_node, TreeNode *idNode)
+static void referSymbol(TreeNode *varNode)
 {
   int is_cur_scope;
   SymbolInfo * symbolInfo;
-  if ((symbolInfo = st_lookup(idNode->attr.ID, &is_cur_scope)) == NULL) /* undeclared V/P/F */
+  if ((symbolInfo = st_lookup(varNode->attr.ID, &is_cur_scope)) == NULL) /* undeclared V/P/F */
     {
-      printError(idNode, "Declaration", "Undeclared symbol \"%s\"", idNode->attr.ID);
+      printError(varNode, "Declaration", "Undeclared symbol \"%s\"", varNode->attr.ID);
     }
   else
     {
       /* already in table, so ignore location,
+       *
        * add line number of use only */
-      st_insert(idNode->attr.ID, idNode->lineno, NULL, NULL);
-      idNode->nodeType = symbolInfo->nodeType;
-      idNode->symbolInfo = symbolInfo;
+      st_refer(varNode->attr.ID, varNode->lineno);
+      varNode->nodeType = symbolInfo->nodeType;
+      varNode->symbolInfo = symbolInfo;
     }
 }
 
@@ -219,21 +218,21 @@ static void insertNode( TreeNode * t, int flags)
         case VariableDeclarationK:
           symbolInfo = setSymbolInfo(t);
           if(symbolInfo)
-            registerSuccess = registerSymbol(t, t->attr.varDecl._id, symbolInfo);
+            registerSuccess = registerSymbol(t, t->attr.varDecl._var, symbolInfo);
           if(!registerSuccess || !symbolInfo) 
             t->nodeType = ErrorT;
           break;
         case ArrayDeclarationK:
           symbolInfo = setSymbolInfo(t);
           if(symbolInfo)
-            registerSuccess = registerSymbol(t, t->attr.arrDecl._id, symbolInfo);
+            registerSuccess = registerSymbol(t, t->attr.arrDecl._var, symbolInfo);
           if(!registerSuccess || !symbolInfo) 
             t->nodeType = ErrorT;
           break;
         case FunctionDeclarationK:
           symbolInfo = setSymbolInfo(t);
           if(symbolInfo)
-            registerSuccess = registerSymbol(t, t->attr.funcDecl._id, symbolInfo);
+            registerSuccess = registerSymbol(t, t->attr.funcDecl._var, symbolInfo);
           if(!registerSuccess || !symbolInfo)
             {
               t->nodeType = ErrorT;
@@ -248,14 +247,14 @@ static void insertNode( TreeNode * t, int flags)
         case VariableParameterK:
           symbolInfo = setSymbolInfo(t);
           if(symbolInfo)
-            registerSuccess = registerSymbol(t, t->attr.varParam._id, symbolInfo);
+            registerSuccess = registerSymbol(t, t->attr.varParam._var, symbolInfo);
           if(!registerSuccess || !symbolInfo)
             t->nodeType = ErrorT;
           break;
         case ArrayParameterK:
           symbolInfo = setSymbolInfo(t);
           if(symbolInfo)
-            registerSuccess = registerSymbol(t, t->attr.arrParam._id, symbolInfo);
+            registerSuccess = registerSymbol(t, t->attr.arrParam._var, symbolInfo);
           if(!registerSuccess || !symbolInfo)
             t->nodeType = ErrorT;
           break;
@@ -307,14 +306,14 @@ static void insertNode( TreeNode * t, int flags)
           break;
 
         case VariableK:
-          referSymbol(t, t);
+          referSymbol(t);
           break;
         case ArrayK:
-          referSymbol(t, t->attr.arr._id);
+          insertNode(t->attr.arr._var, 0);
           insertNode(t->attr.arr.arr_expr, 0);
           break;
         case CallK:
-          referSymbol(t, t->attr.call._id);
+          insertNode(t->attr.call._var, 0);
           insertNode(t->attr.call.expr_list, 0);
           break;
 
@@ -344,7 +343,7 @@ static void mainCheck(TreeNode *t)
     }
   for(; t->sibling; t=t->sibling);
   if(t->nodeKind != FunctionDeclarationK
-     || strcmp(t->attr.funcDecl._id->attr.ID, "main") != 0)
+     || strcmp(t->attr.funcDecl._var->attr.ID, "main") != 0)
     {
       printError(t, "Main", "Main function must be declared at the very last of program.");
       return;
@@ -602,15 +601,15 @@ NodeType typeCheck(TreeNode *n)
         case ArrayK:
         {
           int isError = FALSE;
-          if (typeCheck(t->attr.arr._id) != IntArrayT)
+          if (typeCheck(t->attr.arr._var) != IntArrayT)
             {
-              printError(t, "Type", "Variable '%s' is not subscriptable.", t->attr.arr._id->attr.ID);
+              printError(t, "Type", "Variable '%s' is not subscriptable.", t->attr.arr._var->attr.ID);
               t->nodeType = ErrorT;
               isError = TRUE;
             }
           if(typeCheck(t->attr.arr.arr_expr) != IntT)
             {
-              printError(t, "Type", "Array subscript must be type 'int'.", t->attr.arr._id->attr.ID);
+              printError(t, "Type", "Array subscript must be type 'int'.", t->attr.arr._var->attr.ID);
               t->nodeType = ErrorT;
               isError = TRUE;
             }
@@ -625,18 +624,18 @@ NodeType typeCheck(TreeNode *n)
         case CallK:
         {
           int isError = FALSE;
-          SymbolInfo *info = t->attr.call._id->symbolInfo;
-          NodeType fType = typeCheck(t->attr.call._id);
+          SymbolInfo *info = t->attr.call._var->symbolInfo;
+          NodeType fType = typeCheck(t->attr.call._var);
 
           if (fType != FuncT)
             {
               if (fType == IntT || fType == IntArrayT)
                 {
-                  printError(t, "Type", "Variable '%s' is not callable.", t->attr.call._id->attr.ID);
+                  printError(t, "Type", "Variable '%s' is not callable.", t->attr.call._var->attr.ID);
                 }
               else
                 {
-                  printError(t, "Type", "'%s' is never declared.", t->attr.call._id->attr.ID);
+                  printError(t, "Type", "'%s' is never declared.", t->attr.call._var->attr.ID);
                 }
               t->nodeType = ErrorT;
               isError = TRUE;
@@ -663,7 +662,7 @@ NodeType typeCheck(TreeNode *n)
                       printError(t,
                                  "Type",
                                  "Too many parameters while calling function '%s'.",
-                                 t->attr.call._id->attr.ID);
+                                 t->attr.call._var->attr.ID);
                       isError = TRUE;
                       break;
                     }
@@ -673,7 +672,7 @@ NodeType typeCheck(TreeNode *n)
                                  "Type",
                                  "Type mismatch of parameter at %d while calling '%s'.",
                                  exprIdx + 1,
-                                 t->attr.call._id->attr.ID);
+                                 t->attr.call._var->attr.ID);
                       isError = TRUE;
                     }
                 }
@@ -682,7 +681,7 @@ NodeType typeCheck(TreeNode *n)
                   printError(t,
                              "Type",
                              "Too little parameters while calling function '%s'.",
-                             t->attr.call._id->attr.ID);
+                             t->attr.call._var->attr.ID);
                   isError = TRUE;
                   break;
                 }
@@ -699,7 +698,7 @@ NodeType typeCheck(TreeNode *n)
           /* TODO: get variable's type from st_lookup.
            * we have to modify st_lookup for getting variable's type.
            * */
-          t->nodeType = ErrorT;
+          //t->nodeType = ;
           break;
 
         case ConstantK:
