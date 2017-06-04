@@ -2,10 +2,12 @@
 #define __LOG_DEBUG_H__
 
 #define MALLOC(ptr, size) do { \
-    fprintf(listing, "%s:%d:%s: Memory allocation failed.\n", \
-            __FILE__, __LINE__, __FUNCTION__); \
     ptr = malloc(size);\
-    assert(0);\
+    if(ptr == NULL) {\
+        fprintf(listing, "%s:%d:%s: Memory allocation failed.\n", \
+                __FILE__, __LINE__, __FUNCTION__); \
+        assert(0);\
+    }\
 } while(0)
 
 #ifdef  DEBUG
