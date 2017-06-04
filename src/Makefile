@@ -9,7 +9,7 @@ BISON_CODE=cm.y
 BISON_SRC=cm.tab.c
 BISON_HDR=cm.tab.h
 
-CC_FLAGS = -g
+CC_FLAGS = -std=gnu99
 
 TARGET = util analyze symtab
 

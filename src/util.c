@@ -428,25 +428,25 @@ newCallNode(TreeNode *_var,
 }
 
 TreeNode *
-newVariableNode(char *ID)
+newVariableNode(char *_ID)
 {
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
       t->nodeKind = VariableK;
-      t->attr.ID = copyString(ID);
+      t->attr.ID = copyString(_ID);
     }
   return t;
 }
 
 TreeNode *
-newConstantNode(char *NUM)
+newConstantNode(char *_NUM)
 {
   TreeNode * t = allocateTreeNode();
   if (t != NULL)
     {
       t->nodeKind = ConstantK;
-      t->attr.NUM = atoi(NUM);
+      t->attr.NUM = atoi(_NUM);
     }
 
   return t;
@@ -472,7 +472,7 @@ newTokenTypeNode(TokenType token)
 char*
 copyString(char * s)
 {
-  int n;
+  size_t n;
   char * t;
   if (s==NULL) return NULL;
   n = strlen(s)+1;
