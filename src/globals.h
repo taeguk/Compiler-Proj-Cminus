@@ -104,11 +104,11 @@ typedef enum {
     IntT,
     IntArrayT,
     FuncT,
-} NodeType;
+} ExpType;
 
 typedef struct
 {
-  NodeType nodeType;
+  ExpType nodeType;
   union {
       // VariableDeclarationK
       struct {
@@ -123,9 +123,9 @@ typedef struct
 
       // FunctionDeclarationK
       struct {
-          NodeType retType;
+          ExpType retType;
           int len;
-          NodeType * paramTypeList;
+          ExpType * paramTypeList;
       } funcInfo;
   } attr;
 } SymbolInfo;
@@ -134,7 +134,7 @@ typedef struct treeNode {
   struct treeNode *sibling;
   int lineno;
   NodeKind nodeKind;
-  NodeType nodeType;
+  ExpType nodeType;
   SymbolInfo * symbolInfo;
 
   union {
@@ -175,7 +175,7 @@ typedef struct treeNode {
       struct {
           struct treeNode *local_decl;
           struct treeNode *stmt_list;
-          NodeType retType;
+          ExpType retType;
       } cmpdStmt;
 
       // ExpressionStatementK
@@ -199,7 +199,7 @@ typedef struct treeNode {
       // ReturnStatementK
       struct {
           struct treeNode *expr;
-          NodeType retType;
+          ExpType retType;
       } retStmt;
 
       // AssignExpressionK

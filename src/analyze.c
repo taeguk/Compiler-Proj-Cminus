@@ -16,7 +16,7 @@
 /* counter for variable memory locations */
 static int location = 0;
 
-static NodeType tokenToNodeType (TokenType token)
+static ExpType tokenToExpType (TokenType token)
 {
   switch (token)
     {
@@ -53,7 +53,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
   switch (t->nodeKind)
     {
       case VariableDeclarationK:
-        if (tokenToNodeType(t->attr.varDecl.type_spec->attr.TOK) != IntT)
+        if (tokenToExpType(t->attr.varDecl.type_spec->attr.TOK) != IntT)
           {
             printError(t, "Type", "Variable '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
@@ -64,7 +64,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
 
       case ArrayDeclarationK:
-        if (tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK) != IntT)
+        if (tokenToExpType(t->attr.funcDecl.type_spec->attr.TOK) != IntT)
           {
             printError(t, "Type", "Array '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
@@ -76,17 +76,17 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
 
       case FunctionDeclarationK:
-        if (tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK) == ErrorT)
+        if (tokenToExpType(t->attr.funcDecl.type_spec->attr.TOK) == ErrorT)
           {
             DONT_OCCUR_PRINT;
             return NULL;
           }
         symbolInfo->nodeType = FuncT;
         symbolInfo->attr.funcInfo.retType =
-          tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK);
+          tokenToExpType(t->attr.funcDecl.type_spec->attr.TOK);
 
         TreeNode * param_node;
-        NodeType * newParamList;
+        ExpType * newParamList;
         int n_param;
         int i;
 
@@ -99,7 +99,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             param_node = param_node->sibling;
           }
 
-        MALLOC(newParamList, n_param * sizeof(NodeType));
+        MALLOC(newParamList, n_param * sizeof(ExpType));
 
         param_node = t->attr.funcDecl.params;
         i = 0;
@@ -107,11 +107,11 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
           {
             if (param_node->nodeKind == VariableParameterK)
               newParamList[i] =
-                tokenToNodeType(param_node->attr.varParam.type_spec->attr.TOK); // Is it need type check?
+                tokenToExpType(param_node->attr.varParam.type_spec->attr.TOK); // Is it need type check?
             else if (param_node->nodeKind == ArrayParameterK)
               {
                 newParamList[i] =
-                  tokenToNodeType(param_node->attr.arrParam.type_spec->attr.TOK);
+                  tokenToExpType(param_node->attr.arrParam.type_spec->attr.TOK);
                 if (newParamList[i] != IntT)
                   {
                     DONT_OCCUR_PRINT;
@@ -135,7 +135,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
 
       case VariableParameterK:
-        if (tokenToNodeType(t->attr.varParam.type_spec->attr.TOK) != IntT)
+        if (tokenToExpType(t->attr.varParam.type_spec->attr.TOK) != IntT)
           {
             printError(t, "Type", "Variable parameter '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
@@ -146,7 +146,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
 
       case ArrayParameterK:
-        if (tokenToNodeType(t->attr.arrParam.type_spec->attr.TOK) != IntT)
+        if (tokenToExpType(t->attr.arrParam.type_spec->attr.TOK) != IntT)
           {
             printError(t, "Type", "Array parameter '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
@@ -381,7 +381,7 @@ void buildSymtab(TreeNode * syntaxTree)
 /* Procedure typeCheck performs type evaluation
  * by syntax tree traversal
  */
-NodeType typeCheck(TreeNode *n)
+ExpType typeCheck(TreeNode *n)
 {
   if (n == NULL) return NoneT;
   if (n->nodeType != NotResolvedT) return n->nodeType;
@@ -523,7 +523,7 @@ NodeType typeCheck(TreeNode *n)
             }
           else
             {
-              NodeType type = typeCheck(t->attr.retStmt.expr);
+              ExpType type = typeCheck(t->attr.retStmt.expr);
               if(type != t->attr.retStmt.retType)
                 {
                   printError(t, "Type", "Returning expression must match pre-declared function return type.");
@@ -539,8 +539,8 @@ NodeType typeCheck(TreeNode *n)
 
         case AssignExpressionK:
         {
-          NodeType exprType = typeCheck(t->attr.assignStmt.expr);
-          NodeType varType = typeCheck(t->attr.assignStmt._var);
+          ExpType exprType = typeCheck(t->attr.assignStmt.expr);
+          ExpType varType = typeCheck(t->attr.assignStmt._var);
           if (varType != IntT || varType != exprType)
             {
               if(varType != ErrorT && exprType != ErrorT)
@@ -552,8 +552,8 @@ NodeType typeCheck(TreeNode *n)
 
         case ComparisonExpressionK:
         {
-          NodeType lType = typeCheck(t->attr.cmpExpr.lexpr);
-          NodeType rType = typeCheck(t->attr.cmpExpr.rexpr);
+          ExpType lType = typeCheck(t->attr.cmpExpr.lexpr);
+          ExpType rType = typeCheck(t->attr.cmpExpr.rexpr);
           if (lType == IntT && lType == rType)
             {
               t->nodeType = IntT;
@@ -568,8 +568,8 @@ NodeType typeCheck(TreeNode *n)
 
         case AdditiveExpressionK:
         {
-          NodeType lType = typeCheck(t->attr.addExpr.lexpr);
-          NodeType rType = typeCheck(t->attr.addExpr.rexpr);
+          ExpType lType = typeCheck(t->attr.addExpr.lexpr);
+          ExpType rType = typeCheck(t->attr.addExpr.rexpr);
           if (lType == IntT && lType == rType)
             {
               t->nodeType = IntT;
@@ -584,8 +584,8 @@ NodeType typeCheck(TreeNode *n)
 
         case MultiplicativeExpressionK:
         {
-          NodeType lType = typeCheck(t->attr.multExpr.lexpr);
-          NodeType rType = typeCheck(t->attr.multExpr.rexpr);
+          ExpType lType = typeCheck(t->attr.multExpr.lexpr);
+          ExpType rType = typeCheck(t->attr.multExpr.rexpr);
           if (lType == IntT && lType == rType)
             {
               t->nodeType = IntT;
@@ -625,7 +625,7 @@ NodeType typeCheck(TreeNode *n)
         {
           int isError = FALSE;
           SymbolInfo *info = t->attr.call._var->symbolInfo;
-          NodeType fType = typeCheck(t->attr.call._var);
+          ExpType fType = typeCheck(t->attr.call._var);
 
           if (fType != FuncT)
             {

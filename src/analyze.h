@@ -16,6 +16,6 @@ void buildSymtab(TreeNode *);
 /* Procedure typeCheck performs type checking 
  * by a postorder syntax tree traversal
  */
-NodeType typeCheck(TreeNode *);
+ExpType typeCheck(TreeNode *);
 
 #endif
