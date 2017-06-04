@@ -111,10 +111,12 @@ typedef struct
   union {
       // VariableDeclarationK
       struct {
+          int isParam;
       } intInfo;
 
       // ArrayDeclarationK
       struct {
+          int isParam;
           int len;
       } arrInfo;
 

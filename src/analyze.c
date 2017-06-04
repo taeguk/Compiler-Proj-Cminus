@@ -65,6 +65,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             return NULL;
           }
         symbolInfo->nodeType = IntT;
+        symbolInfo->attr.intInfo.isParam = 0;
         break;
 
 
@@ -76,6 +77,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
           }
         symbolInfo->nodeType = IntArrayT; // TODO: Type check
         symbolInfo->attr.arrInfo.len = t->attr.arrDecl._num->attr.NUM; // TODO: bracket type check
+        symbolInfo->attr.intInfo.isParam = 0;
         break;
 
 
@@ -141,6 +143,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             return NULL;
           }
         symbolInfo->nodeType = IntT;
+        symbolInfo->attr.intInfo.isParam = 1;
         break;
 
 
@@ -151,6 +154,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             return NULL;
           }
         symbolInfo->nodeType = IntArrayT;
+        symbolInfo->attr.intInfo.isParam = 1;
         break;
 
       default:
