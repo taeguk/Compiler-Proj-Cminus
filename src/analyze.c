@@ -69,8 +69,8 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             printError(t, "Type", "Array '%s' cannot be void type.", t->attr.varDecl._var->attr.ID);
             return NULL;
           }
-        symbolInfo->nodeType = IntArrayT; // TODO: Type check
-        symbolInfo->attr.arrInfo.len = t->attr.arrDecl._num->attr.NUM; // TODO: bracket type check
+        symbolInfo->nodeType = IntArrayT;
+        symbolInfo->attr.arrInfo.len = t->attr.arrDecl._num->attr.NUM;
         symbolInfo->attr.intInfo.isParam = 0;
         break;
 
@@ -121,7 +121,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
               }
             else
               {
-                DONT_OCCUR_PRINT; // TODO: check is it really "DON'T occur"
+                DONT_OCCUR_PRINT;
                 return NULL;
               }
 
@@ -695,10 +695,6 @@ ExpType typeCheck(TreeNode *n)
           break;
 
         case VariableK:
-          /* TODO: get variable's type from st_lookup.
-           * we have to modify st_lookup for getting variable's type.
-           * */
-          //t->nodeType = ;
           break;
 
         case ConstantK:
