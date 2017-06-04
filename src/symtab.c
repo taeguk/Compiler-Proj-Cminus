@@ -179,6 +179,7 @@ set_data_type (TokenType op)
  */
 void printSymTab(FILE * listing)
 {
+  if(!TraceAnalyze) return;
   int i;
   fprintf(listing,
           "Name\t\tScope\tLoc\tV/P/F\tArray?\tArrSize\tType\tLine Numbers\n"
