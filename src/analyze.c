@@ -83,46 +83,48 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
         symbolInfo->attr.funcInfo.retType =
           tokenToNodeType(t->attr.funcDecl.type_spec->attr.TOK);
 
-        TreeNode * trace;
+        TreeNode * param_node;
         NodeType * newParamList;
         int n_param;
         int i;
 
         n_param = 0;
-        trace = t->attr.funcDecl.params;
+        param_node = t->attr.funcDecl.params;
 
-        while (trace)
+        while (param_node)
           {
             ++ n_param;
-            trace = trace->sibling;
+            param_node = param_node->sibling;
           }
 
         MALLOC(newParamList, n_param * sizeof(NodeType));
 
-        trace = t->attr.funcDecl.params;
+        param_node = t->attr.funcDecl.params;
         i = 0;
-        while (trace)
+        while (param_node)
           {
-            if (trace->nodeKind == VariableParameterK)
+            if (param_node->nodeKind == VariableParameterK)
               newParamList[i] =
-                tokenToNodeType(trace->attr.varParam.type_spec->attr.TOK); // Is it need type check?
-            else if (trace->nodeKind == ArrayParameterK)
+                tokenToNodeType(param_node->attr.varParam.type_spec->attr.TOK); // Is it need type check?
+            else if (param_node->nodeKind == ArrayParameterK)
               {
                 newParamList[i] =
-                  tokenToNodeType(trace->attr.arrParam.type_spec->attr.TOK);
+                  tokenToNodeType(param_node->attr.arrParam.type_spec->attr.TOK);
                 if (newParamList[i] != IntT)
-                  goto FUCK;
+                  {
+                    DONT_OCCUR_PRINT;
+                    return NULL;
+                  }
                 newParamList[i] = IntArrayT;
               }
             else
               {
-FUCK:
                 DONT_OCCUR_PRINT; // TODO: check is it really "DON'T occur"
                 return NULL;
               }
 
             ++i;
-            trace = trace->sibling;
+            param_node = param_node->sibling;
           }
 
         symbolInfo->attr.funcInfo.paramTypeList = newParamList;
