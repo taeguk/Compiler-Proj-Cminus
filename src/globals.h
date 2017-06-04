@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 
 #ifndef YYPARSER
 #include "build/cm.tab.h"
@@ -103,26 +104,28 @@ typedef enum {
     IntT,
     IntArrayT,
     FuncT,
-} NodeType;
+} ExpType;
 
 typedef struct
 {
-  NodeType nodeType;
+  ExpType nodeType;
   union {
       // VariableDeclarationK
       struct {
+          int isParam;
       } intInfo;
 
       // ArrayDeclarationK
       struct {
+          int isParam;
           int len;
       } arrInfo;
 
       // FunctionDeclarationK
       struct {
-          NodeType retType;
+          ExpType retType;
           int len;
-          NodeType * paramTypeList;
+          ExpType * paramTypeList;
       } funcInfo;
   } attr;
 } SymbolInfo;
@@ -131,27 +134,27 @@ typedef struct treeNode {
   struct treeNode *sibling;
   int lineno;
   NodeKind nodeKind;
-  NodeType nodeType;
+  ExpType nodeType;
   SymbolInfo * symbolInfo;
 
   union {
       // VariableDeclarationK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
       } varDecl;
 
       // ArrayDeclarationK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *_num;
       } arrDecl;
 
       // FunctionDeclarationK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *params;
           struct treeNode *cmpd_stmt;
       } funcDecl;
@@ -159,20 +162,20 @@ typedef struct treeNode {
       // VariableParameterK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
       } varParam;
 
       // ArrayParameterK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
       } arrParam;
       
       // CompoundStatementK
       struct {
           struct treeNode *local_decl;
           struct treeNode *stmt_list;
-          NodeType retType;
+          ExpType retType;
       } cmpdStmt;
 
       // ExpressionStatementK
@@ -196,7 +199,7 @@ typedef struct treeNode {
       // ReturnStatementK
       struct {
           struct treeNode *expr;
-          NodeType retType;
+          ExpType retType;
       } retStmt;
 
       // AssignExpressionK
@@ -228,13 +231,13 @@ typedef struct treeNode {
 
       // ArrayK
       struct {
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *arr_expr;
       } arr;
 
       // CallK
       struct {
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *expr_list;
       } call;
 

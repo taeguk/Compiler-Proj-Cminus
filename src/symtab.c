@@ -70,7 +70,6 @@ int st_pop_scope(void)
           struct BucketListRec *tmp = l;
           l = l->next;
 
-          // TODO: print some infomations.
           free(tmp);
         }
       hashTable[h] = l;
@@ -86,33 +85,51 @@ int st_pop_scope(void)
  * loc = memory location is inserted only the
  * first time, otherwise ignored
  */
-void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
+void st_register(char * name, int lineno, SymbolInfo * symbolInfo)
 {
+  assert(name != NULL);
+  assert(symbolInfo != NULL);
+
   int h = hash(name);
   BucketList l =  hashTable[h];
-  while ((l != NULL) && (l->scope_level == cur_scope_level) && 
-         (strcmp(name,l->name) != 0))
+
+  while (l != NULL && l->scope_level == cur_scope_level && 
+         strcmp(name,l->name) != 0)
     l = l->next;
-  if (l == NULL || l->scope_level < cur_scope_level) /* variable not yet in current scope. */
-  { l = (BucketList) malloc(sizeof(struct BucketListRec));
-    l->name = name;
-    l->lines = (LineList) malloc(sizeof(struct LineListRec));
-    l->lines->lineno = lineno;
-    l->tree_node = node;
-    l->symbolInfo = info;
-    l->lines->next = NULL;
-    l->next = hashTable[h];
-    l->scope_level = cur_scope_level;
-    valid_hash_arr[valid_hash_arr_cnt++] = h;
-    hashTable[h] = l; }
-  else /* found in table, so just add line number */
-  { LineList t = l->lines;
-    while (t->next != NULL) t = t->next;
-    t->next = (LineList) malloc(sizeof(struct LineListRec));
-    t->next->lineno = lineno;
-    t->next->next = NULL;
-  }
-} /* st_insert */
+
+  assert(l == NULL || l->scope_level < cur_scope_level);
+
+  MALLOC(l, sizeof(struct BucketListRec));
+  l->name = name;
+  MALLOC(l->lines, sizeof(struct LineListRec));
+  l->lines->lineno = lineno;
+  l->symbolInfo = symbolInfo;
+  l->lines->next = NULL;
+  l->next = hashTable[h];
+  l->scope_level = cur_scope_level;
+  valid_hash_arr[valid_hash_arr_cnt++] = h;
+  hashTable[h] = l;
+}
+
+void st_refer(char * name, int lineno)
+{
+  assert(name != NULL);
+
+  int h = hash(name);
+  BucketList l =  hashTable[h];
+
+  while (l != NULL && strcmp(name,l->name) != 0)
+    l = l->next;
+
+  assert(l != NULL);
+
+  LineList t = l->lines;
+  while (t->next != NULL) 
+    t = t->next;
+  MALLOC(t->next, sizeof(struct LineListRec));
+  t->next->lineno = lineno;
+  t->next->next = NULL;
+}
 
 /* Function st_lookup returns the memory
  * location of a variable or -1 if not found
@@ -123,7 +140,9 @@ SymbolInfo* st_lookup ( char * name, int * is_cur_scope /* 0 or 1 */ )
   BucketList l =  hashTable[h];
 
   while ((l != NULL) && (strcmp(name,l->name) != 0))
-    l = l->next;
+    {
+      l = l->next;
+    }
 
   if (l != NULL)
     {
@@ -160,10 +179,11 @@ set_data_type (TokenType op)
  */
 void printSymTab(FILE * listing)
 {
+  if(!TraceAnalyze) return;
   int i;
   fprintf(listing,
-          "Name\tScope\tLoc\tV/P/F\tArray?\tArrSize\tType\tLine Numbers\n"
-          "--------------------------------------------------------------------\n");
+          "Name\t\tScope\tLoc\tV/P/F\tArray?\tArrSize\tType\tLine Numbers\n"
+          "----------------------------------------------------------------------------\n");
 
   for (i=0;i<SIZE;++i)
     {
@@ -178,57 +198,12 @@ void printSymTab(FILE * listing)
            l && l->scope_level == cur_scope_level; 
            l = l->next)
         {
-          TreeNode *node = l->tree_node;
-
-          if (!node)
-            continue;
-
+          SymbolInfo* symbolInfo = l->symbolInfo;
           int is_arr, size_arr = 0;
-          ID_TYPE id_type = -1; /* (Var,Par,Func) (0,1,2) */
-          DATA_TYPE data_type; /* (void, int, array) (0,1,2) */
 
-          switch (node->nodeKind)
-            {
-              /* Declaration */
-            case VariableDeclarationK:
-              is_arr = FALSE;
-              id_type = VAR;
-              data_type = set_data_type(node->attr.varDecl.type_spec->attr.TOK);
-              break; /* VariableDeclarationK */
-
-            case ArrayDeclarationK:
-              is_arr = TRUE;
-              id_type = VAR;
-              size_arr = node->attr.arrDecl._num->attr.NUM;
-              data_type = DT_ARRAY;
-              break; /* ArrayDeclarationK */
-
-            case FunctionDeclarationK:
-              is_arr = FALSE;
-              id_type = FUNC;
-              data_type = set_data_type(node->attr.funcDecl.type_spec->attr.TOK);
-              break; /* FunctionDeclarationK */
-
-              /* Parameter */
-            case VariableParameterK:
-              is_arr = FALSE;
-              id_type = PAR;
-              data_type = set_data_type(node->attr.varParam.type_spec->attr.TOK);
-              break; /* VariableParameterK */
-
-            case ArrayParameterK:
-              is_arr = TRUE;
-              id_type = PAR;
-              size_arr = 0;
-              data_type = DT_ARRAY;
-              break;
-            default:
-              fprintf(listing, "No nodeKind, %d\n", node->nodeKind);
-              DONT_OCCUR_PRINT;
-            }
 
           /* print name */
-          fprintf(listing, "%-7s ", l->name);
+          fprintf(listing, "%-15s ", l->name);
 
           /* print scope */
           fprintf(listing, "%-8d", l->scope_level);
@@ -237,46 +212,37 @@ void printSymTab(FILE * listing)
           fprintf(listing, "%-6d  ", l->memloc);
 
           /* print ID Type, V/P/F = 0,1,2 */
-          switch (id_type)
+          switch (symbolInfo->nodeType)
             {
-            case VAR: /* variable */
-              fprintf(listing, "%-8s", "Var");
-              break;
-            case PAR: /* Parameter */
-              fprintf(listing, "%-8s", "Par");
-              break;
-            case FUNC: /* Function */
-              fprintf(listing, "%-8s", "Func");
-              break;
-            default:
-              fprintf(listing, "No id_type, %-8d", id_type);
-              DONT_OCCUR_PRINT;
-              break;
-            }
+            case IntT:
+              if (symbolInfo->attr.intInfo.isParam)
+                fprintf(listing, "%-8s", "Par");
+              else
+                fprintf(listing, "%-8s", "Var");
 
-          /* is_arr with Array size if it is array */
-          if (is_arr)
-            fprintf(listing, "%-8s%-8d", "Array", size_arr);
-          else
-            fprintf(listing, "%-8s%-8c", "No", '-');
+              fprintf(listing, "%-8s%-8c%-5s", "No", '-', "int");
+              break;
+            case IntArrayT:
+              if (symbolInfo->attr.arrInfo.isParam)
+                fprintf(listing, "%-8s", "Par");
+              else
+                fprintf(listing, "%-8s", "Var");
 
-          /* data type of ID: void, int, array(0, 1, 2) */
-          switch (data_type)
-            {
-            case DT_VOID:
-              fprintf(listing, "%-5s", "void");
+              fprintf(listing, "%-8s%-8d%-8s",
+                      "Array", symbolInfo->attr.arrInfo.len, "array");
               break;
-            case DT_INT:
-              fprintf(listing, "%-5s", "int");
-              break;
-            case DT_ARRAY:
-              fprintf(listing, "%-5s", "array");
-              break;
-            case DT_INVALID:
-              fprintf(listing, "%-5s", "Invalid");
+            case FuncT: /* Function */
+              fprintf(listing, "%-8s%-8s%-8c", "Func", "No", '-');
+              if (symbolInfo->attr.funcInfo.retType == IntT)
+                fprintf(listing, "%-5s", "int");
+              else if (symbolInfo->attr.funcInfo.retType == VoidT)
+                fprintf(listing, "%-5s", "void");
+              else
+                DONT_OCCUR_PRINT;
               break;
             default:
               DONT_OCCUR_PRINT;
+              break;
             }
 
           /* line numbers */
