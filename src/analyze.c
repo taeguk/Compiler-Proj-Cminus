@@ -177,7 +177,7 @@ static int registerSymbol(TreeNode *regNode, TreeNode *idNode, SymbolInfo * symb
   if (st_lookup(idNode->attr.ID, &is_cur_scope) == NULL || !is_cur_scope)
     {
       /* not yet in table, so treat as new definition */
-      st_insert(idNode->attr.ID, idNode->lineno, regNode, symbolInfo /* TODO: in project 4 */);
+      st_register(idNode->attr.ID, idNode->lineno, symbolInfo);
       idNode->nodeType = symbolInfo->nodeType;
       idNode->symbolInfo = symbolInfo;
       return TRUE;
@@ -201,8 +201,9 @@ static void referSymbol(TreeNode *reg_node, TreeNode *idNode)
   else
     {
       /* already in table, so ignore location,
+       *
        * add line number of use only */
-      st_insert(idNode->attr.ID, idNode->lineno, NULL, NULL);
+      st_refer(idNode->attr.ID, idNode->lineno);
       idNode->nodeType = symbolInfo->nodeType;
       idNode->symbolInfo = symbolInfo;
     }

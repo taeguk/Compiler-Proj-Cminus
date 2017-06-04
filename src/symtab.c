@@ -70,7 +70,6 @@ int st_pop_scope(void)
           struct BucketListRec *tmp = l;
           l = l->next;
 
-          // TODO: print some infomations.
           free(tmp);
         }
       hashTable[h] = l;
@@ -86,6 +85,53 @@ int st_pop_scope(void)
  * loc = memory location is inserted only the
  * first time, otherwise ignored
  */
+void st_register(char * name, int lineno, SymbolInfo * symbolInfo)
+{
+  assert(name != NULL);
+  assert(symbolInfo != NULL);
+
+  int h = hash(name);
+  BucketList l =  hashTable[h];
+
+  while (l != NULL && l->scope_level == cur_scope_level && 
+         strcmp(name,l->name) != 0)
+    l = l->next;
+
+  assert(l == NULL || l->scope_level < cur_scope_level);
+
+  l = (BucketList) malloc(sizeof(struct BucketListRec));
+  l->name = name;
+  l->lines = (LineList) malloc(sizeof(struct LineListRec));
+  l->lines->lineno = lineno;
+  l->symbolInfo = symbolInfo;
+  l->lines->next = NULL;
+  l->next = hashTable[h];
+  l->scope_level = cur_scope_level;
+  valid_hash_arr[valid_hash_arr_cnt++] = h;
+  hashTable[h] = l;
+}
+
+void st_refer(char * name, int lineno)
+{
+  assert(name != NULL);
+
+  int h = hash(name);
+  BucketList l =  hashTable[h];
+
+  while (l != NULL && strcmp(name,l->name) != 0)
+    l = l->next;
+
+  assert(l != NULL);
+
+  LineList t = l->lines;
+  while (t->next != NULL) 
+    t = t->next;
+  t->next = (LineList) malloc(sizeof(struct LineListRec));
+  t->next->lineno = lineno;
+  t->next->next = NULL;
+}
+
+/*
 void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
 {
   int h = hash(name);
@@ -94,7 +140,7 @@ void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
   while ((l != NULL) && (l->scope_level == cur_scope_level || info == NULL) && 
          (strcmp(name,l->name) != 0))
     l = l->next;
-  if (info != NULL && (l == NULL || l->scope_level < cur_scope_level)) /* variable not yet in current scope. */
+  if (info != NULL && (l == NULL || l->scope_level < cur_scope_level))
   { 
     l = (BucketList) malloc(sizeof(struct BucketListRec));
     l->name = name;
@@ -107,14 +153,16 @@ void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info )
     l->scope_level = cur_scope_level;
     valid_hash_arr[valid_hash_arr_cnt++] = h;
     hashTable[h] = l; }
-  else /* found in table, so just add line number */
-  { LineList t = l->lines;
+  else
+  { 
+    LineList t = l->lines;
     while (t->next != NULL) t = t->next;
     t->next = (LineList) malloc(sizeof(struct LineListRec));
     t->next->lineno = lineno;
     t->next->next = NULL;
   }
-} /* st_insert */
+}
+*/
 
 /* Function st_lookup returns the memory
  * location of a variable or -1 if not found

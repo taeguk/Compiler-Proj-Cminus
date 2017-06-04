@@ -48,7 +48,9 @@ int st_pop_scope(void);
  * loc = memory location is inserted only the
  * first time, otherwise ignored
  */
-void st_insert( char * name, int lineno, TreeNode *node, SymbolInfo * info );
+
+void st_register(char * name, int lineno, SymbolInfo * symbolInfo);
+void st_refer(char * name, int lineno);
 
 /* Function st_lookup returns the memory 
  * location of a variable or -1 if not found
