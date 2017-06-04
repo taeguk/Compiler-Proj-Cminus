@@ -48,13 +48,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
   SymbolInfo * symbolInfo;
 
   if (t == NULL) return NULL;
-  if ((symbolInfo = malloc(sizeof(*symbolInfo)) ) == NULL)
-    {
-      // Error
-      // TODO: User friendly error message
-      DONT_OCCUR_PRINT;
-      return NULL;
-    }
+  MALLOC(symbolInfo, sizeof(*symbolInfo));
 
   switch (t->nodeKind)
     {
@@ -103,11 +97,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             trace = trace->sibling;
           }
 
-        if ((newParamList = malloc(n_param * sizeof(NodeType))) == NULL)
-          {
-            DONT_OCCUR_PRINT;
-            return NULL;
-          }
+        MALLOC(newParamList, n_param * sizeof(NodeType));
 
         trace = t->attr.funcDecl.params;
         i = 0;
