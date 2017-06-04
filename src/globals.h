@@ -139,20 +139,20 @@ typedef struct treeNode {
       // VariableDeclarationK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
       } varDecl;
 
       // ArrayDeclarationK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *_num;
       } arrDecl;
 
       // FunctionDeclarationK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *params;
           struct treeNode *cmpd_stmt;
       } funcDecl;
@@ -160,13 +160,13 @@ typedef struct treeNode {
       // VariableParameterK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
       } varParam;
 
       // ArrayParameterK
       struct {
           struct treeNode *type_spec;
-          struct treeNode *_id;
+          struct treeNode *_var;
       } arrParam;
       
       // CompoundStatementK
@@ -229,13 +229,13 @@ typedef struct treeNode {
 
       // ArrayK
       struct {
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *arr_expr;
       } arr;
 
       // CallK
       struct {
-          struct treeNode *_id;
+          struct treeNode *_var;
           struct treeNode *expr_list;
       } call;
 
