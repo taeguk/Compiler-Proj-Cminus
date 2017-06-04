@@ -181,8 +181,8 @@ void printSymTab(FILE * listing)
 {
   int i;
   fprintf(listing,
-          "Name\tScope\tLoc\tV/P/F\tArray?\tArrSize\tType\tLine Numbers\n"
-          "--------------------------------------------------------------------\n");
+          "Name\t\tScope\tLoc\tV/P/F\tArray?\tArrSize\tType\tLine Numbers\n"
+          "----------------------------------------------------------------------------\n");
 
   for (i=0;i<SIZE;++i)
     {
@@ -202,7 +202,7 @@ void printSymTab(FILE * listing)
 
 
           /* print name */
-          fprintf(listing, "%-7s ", l->name);
+          fprintf(listing, "%-15s ", l->name);
 
           /* print scope */
           fprintf(listing, "%-8d", l->scope_level);
