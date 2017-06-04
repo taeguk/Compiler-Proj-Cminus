@@ -5,7 +5,7 @@
     fprintf(listing, "%s:%d:%s: Memory allocation failed.\n", \
             __FILE__, __LINE__, __FUNCTION__); \
     ptr = malloc(size);\
-    assert(0);\
+    assert(ptr);\
 } while(0)
 
 #ifdef  DEBUG
