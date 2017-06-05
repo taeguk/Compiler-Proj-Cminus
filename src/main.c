@@ -15,7 +15,7 @@
 /* set NO_CODE to TRUE to get a compiler that does not
  * generate code
  */
-#define NO_CODE TRUE
+#define NO_CODE FALSE
 
 #include "util.h"
 #if NO_PARSE
@@ -41,7 +41,7 @@ int EchoSource = TRUE;
 int TraceScan = FALSE;
 int TraceParse = TRUE;
 int TraceAnalyze = FALSE;
-int TraceCode = FALSE;
+int TraceCode = TRUE;
 
 int Error = FALSE;
 
@@ -101,7 +101,7 @@ main(int argc, char* argv[])
     int fnlen = strcspn(pgm,".");
     codefile = (char *) calloc(fnlen+4, sizeof(char));
     strncpy(codefile,pgm,fnlen);
-    strcat(codefile,".tm");
+    strcat(codefile,".tm"); // TODO: Change a file extension
     code = fopen(codefile,"w");
     if (code == NULL)
     {
