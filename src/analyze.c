@@ -70,7 +70,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             return NULL;
           }
         symbolInfo->nodeType = IntArrayT;
-        symbolInfo->attr.arrInfo.len = t->attr.arrDecl._num->attr.NUM;
+        symbolInfo->attr.arrInfo.arrLen = t->attr.arrDecl._num->attr.NUM;
         symbolInfo->attr.intInfo.isParam = 0;
         break;
 
@@ -130,7 +130,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
           }
 
         symbolInfo->attr.funcInfo.paramTypeList = newParamList;
-        symbolInfo->attr.funcInfo.len = n_param;
+        symbolInfo->attr.funcInfo.paramLen = n_param;
         break;
 
 
@@ -657,7 +657,7 @@ ExpType typeCheck(TreeNode *n)
                   expr != NULL;
                   expr = expr->sibling, exprIdx++)
                 {
-                  if(exprIdx >= info->attr.funcInfo.len)
+                  if(exprIdx >= info->attr.funcInfo.paramLen)
                     {
                       printError(t,
                                  "Type",
@@ -676,7 +676,7 @@ ExpType typeCheck(TreeNode *n)
                       isError = TRUE;
                     }
                 }
-              if(exprIdx < info->attr.funcInfo.len)
+              if(exprIdx < info->attr.funcInfo.paramLen)
                 {
                   printError(t,
                              "Type",

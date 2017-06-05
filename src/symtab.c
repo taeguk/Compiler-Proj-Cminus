@@ -229,7 +229,7 @@ void printSymTab(FILE * listing)
                 fprintf(listing, "%-8s", "Var");
 
               fprintf(listing, "%-8s%-8d%-8s",
-                      "Array", symbolInfo->attr.arrInfo.len, "array");
+                      "Array", symbolInfo->attr.arrInfo.arrLen, "array");
               break;
             case FuncT: /* Function */
               fprintf(listing, "%-8s%-8s%-8c", "Func", "No", '-');

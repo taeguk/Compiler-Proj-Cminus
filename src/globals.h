@@ -118,13 +118,13 @@ typedef struct
       // ArrayDeclarationK
       struct {
           int isParam;
-          int len;
+          int arrLen;
       } arrInfo;
 
       // FunctionDeclarationK
       struct {
           ExpType retType;
-          int len;
+          int paramLen;
           ExpType * paramTypeList;
       } funcInfo;
   } attr;
