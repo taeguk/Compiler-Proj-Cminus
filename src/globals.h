@@ -120,15 +120,15 @@ typedef struct
       // ArrayDeclarationK
       struct {
           int isParam;
-          int len;
           int memloc;
           int globalmemloc;
+          int arrLen;
       } arrInfo;
 
       // FunctionDeclarationK
       struct {
           ExpType retType;
-          int len;
+          int paramLen;
           ExpType * paramTypeList;
           int label;
       } funcInfo;

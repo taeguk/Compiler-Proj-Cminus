@@ -18,7 +18,7 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
       if(t->nodeKind == VariableDeclarationK)
         t->symbolInfo->attr.intInfo.globalmemloc = globalMemAlloc(sizeof(int));
       else if(t->nodeKind == ArrayDeclarationK)
-        t->symbolInfo->attr.arrInfo.globalmemloc = globalMemAlloc(sizeof(int) * t->symbolInfo->attr.arrInfo.len);
+        t->symbolInfo->attr.arrInfo.globalmemloc = globalMemAlloc(sizeof(int) * t->symbolInfo->attr.arrInfo.arrLen);
       else if(t->nodeKind == FunctionDeclarationK)
         {
           // Function labeling
@@ -41,7 +41,7 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
               else if(param->symbolInfo->nodeType == IntArrayT)
                 {
                   param->symbolInfo->attr.arrInfo.memloc = accLoc;
-                  accLoc += sizeof(int) * param->symbolInfo->attr.arrInfo.len;
+                  accLoc += sizeof(int) * param->symbolInfo->attr.arrInfo.arrLen;
                 }
               else
                 {
