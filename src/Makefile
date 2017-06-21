@@ -11,7 +11,7 @@ BISON_HDR=cm.tab.h
 
 CC_FLAGS = -std=gnu99
 
-TARGET = util analyze symtab
+TARGET = util analyze symtab cgen
 
 # Targets
 build: build.bison build.lex build.core

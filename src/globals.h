@@ -113,12 +113,16 @@ typedef struct
       // VariableDeclarationK
       struct {
           int isParam;
+          int memloc;
+          int globalmemloc;
       } intInfo;
 
       // ArrayDeclarationK
       struct {
           int isParam;
           int len;
+          int memloc;
+          int globalmemloc;
       } arrInfo;
 
       // FunctionDeclarationK
@@ -126,6 +130,7 @@ typedef struct
           ExpType retType;
           int len;
           ExpType * paramTypeList;
+          int label;
       } funcInfo;
   } attr;
 } SymbolInfo;
