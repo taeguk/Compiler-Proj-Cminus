@@ -113,14 +113,14 @@ typedef struct
       // VariableDeclarationK
       struct {
           int isParam;
-          int memloc;
+          int memloc; // real location: memloc($fp)
           int globalFlag;
       } intInfo;
 
       // ArrayDeclarationK
       struct {
           int isParam;
-          int memloc;
+          int memloc; // real location: memloc($fp)
           int globalFlag;
           int arrLen;
       } arrInfo;
