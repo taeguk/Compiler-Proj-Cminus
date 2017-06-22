@@ -229,6 +229,10 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           //   }
           //   return 0;
           // }
+          if(t->attr.retStmt.expr != NULL)
+            if(localCodeGen(t->attr.retStmt.expr, codeStream, currStack) != currStack)
+              DONT_OCCUR_PRINT;
+          
           // cleanup
           fprintf(codeStream, "\n# Stack cleanup\n");
 
