@@ -4,7 +4,6 @@
 static void localCodeGen(TreeNode *, FILE *, int);
 static int globalMemAlloc(int);
 static int localMemAlloc(int);
-static int funcLabelAlloc(void);
 
 // Global decls
 void codeGen(TreeNode *syntaxTree, FILE *codeStream)
@@ -16,17 +15,22 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
       t = t->sibling)
     {
       if(t->nodeKind == VariableDeclarationK)
-        t->symbolInfo->attr.intInfo.globalmemloc = globalMemAlloc(sizeof(int));
+        {
+          t->symbolInfo->attr.intInfo.memloc = globalMemAlloc(sizeof(int));
+          t->symbolInfo->attr.intInfo.globalFlag = 1;
+        }
       else if(t->nodeKind == ArrayDeclarationK)
-        t->symbolInfo->attr.arrInfo.globalmemloc = globalMemAlloc(sizeof(int) * t->symbolInfo->attr.arrInfo.arrLen);
+        {
+          t->symbolInfo->attr.arrInfo.memloc = globalMemAlloc(sizeof(int) * t->symbolInfo->attr.arrInfo.arrLen);
+          t->symbolInfo->attr.arrInfo.globalFlag = 1;
+        }
       else if(t->nodeKind == FunctionDeclarationK)
         {
           // Function labeling
-          t->symbolInfo->attr.funcInfo.label = funcLabelAlloc();
           fprintf(codeStream, "# Function declaration\n");
-          fprintf(codeStream, "f%08x:", t->symbolInfo->attr.funcInfo.label);
+          fprintf(codeStream, "%s:", t->attr.funcDecl._var->attr.ID);
 
-          // Function parameters total memory
+          // Function parameter's memory location setting
           TreeNode *param;
           int accLoc = 0;
           for(param = t->attr.funcDecl.params;
@@ -104,13 +108,6 @@ static int localMemAlloc(int size)
   static int addr = 0x7fffffff;
   addr -= size;
   return addr;
-}
-
-// Function label generator
-static int funcLabelAlloc(void)
-{
-  static int label = 0x00000000;
-  return label++;
 }
 
 // Local decls

@@ -114,14 +114,14 @@ typedef struct
       struct {
           int isParam;
           int memloc;
-          int globalmemloc;
+          int globalFlag;
       } intInfo;
 
       // ArrayDeclarationK
       struct {
           int isParam;
           int memloc;
-          int globalmemloc;
+          int globalFlag;
           int arrLen;
       } arrInfo;
 
@@ -130,7 +130,6 @@ typedef struct
           ExpType retType;
           int paramLen;
           ExpType * paramTypeList;
-          int label;
       } funcInfo;
   } attr;
 } SymbolInfo;
