@@ -98,17 +98,19 @@ main(int argc, char* argv[])
   if (! Error)
   {
     char * codefile;
-    int fnlen = strcspn(pgm,".");
-    codefile = (char *) calloc(fnlen+4, sizeof(char));
+    int fnlen = 0, i;
+    for(i=0; pgm[i]!='\0'; ++i)
+      if(pgm[i] == '.') fnlen = i;
+    codefile = (char *) calloc(fnlen+3, sizeof(char));
     strncpy(codefile,pgm,fnlen);
-    strcat(codefile,".tm"); // TODO: Change a file extension
+    strcat(codefile,".s");
     code = fopen(codefile,"w");
     if (code == NULL)
     {
       printf("Unable to open %s\n",codefile);
       exit(1);
     }
-    codeGen(syntaxTree,codefile);
+    codeGen(syntaxTree, code);
     fclose(code);
   }
 #endif
