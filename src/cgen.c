@@ -48,7 +48,7 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
 
           // real location
           // ex. f(a, b, c)
-          // a: 8(sp), b: 4(sp), c:0(sp)
+          // a: 8(fp), b: 4(fp), c:0(fp)
           // pushed early <--> pushed late
           for(param = t->attr.funcDecl.params;
               param != NULL;
@@ -57,11 +57,11 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
               switch(param->nodeType)
                 {
                 case VariableParameterK:
-                  accLoc += sizeof(int);
+                  accLoc -= sizeof(int);
                   param->attr.varParam._var->symbolInfo->attr.intInfo.memloc = accLoc;
                   break;
                 case ArrayParameterK:
-                  accLoc += regSize;
+                  accLoc -= regSize;
                   param->attr.arrParam._var->symbolInfo->attr.intInfo.memloc = accLoc;
                   break;
                 default:
@@ -144,7 +144,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           int size = sizeof(int);
           fprintf(codeStream, "\n# Local variable declaration\n");
-          fprintf(codeStream, "addiu $sp, $sp, %d\n", size);
+          fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
           currStack += size;
           t->attr.varDecl._var->symbolInfo->attr.intInfo.memloc = -currStack;
           break;
@@ -153,7 +153,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           int size = regSize;
           fprintf(codeStream, "\n# Local array declaration\n");
-          fprintf(codeStream, "addiu $sp, $sp, %d\n", size);
+          fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
           currStack += size;
           t->attr.varDecl._var->symbolInfo->attr.arrInfo.memloc = -currStack;
           break;
@@ -232,7 +232,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           if(t->attr.retStmt.expr != NULL)
             if(localCodeGen(t->attr.retStmt.expr, codeStream, currStack) != currStack)
               DONT_OCCUR_PRINT;
-          
+
           // cleanup
           fprintf(codeStream, "\n# Stack cleanup\n");
 
@@ -346,11 +346,11 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
 
               if(localCodeGen(expr, codeStream, currStack + accLoc) != (currStack + accLoc))
                 DONT_OCCUR_PRINT;
-              fprintf(codeStream, "addiu, $sp, $sp, %d\n", size);
+              fprintf(codeStream, "addiu, $sp, $sp, %d\n", -size);
               fprintf(codeStream, "sw $v0, 0($sp)\n");
               accLoc += size;
             }
-          fprintf(codeStream, "addiu, $sp, $sp, %d\n", -accLoc);
+          fprintf(codeStream, "addiu, $sp, $sp, %d\n", accLoc);
           break;
         }
 
