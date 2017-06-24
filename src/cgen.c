@@ -169,14 +169,12 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               decl = decl->sibling)
             updateStack = localCodeGen(decl, codeStream, updateStack);
 
-          if(localCodeGen(t->attr.selectStmt.if_stmt, codeStream, updateStack) != updateStack)
-            DONT_OCCUR_PRINT;
           // stack cleanup
-          if(updateStack <= currStack)
+          if(updateStack < currStack)
             DONT_OCCUR_PRINT;
           if(updateStack > 0) // it does not have return stmt
             {
-              fprintf(codeStream, "\n# Stack cleanup\n");
+              fprintf(codeStream, "\n# Local stack cleanup\n");
               fprintf(codeStream, "addiu $sp, $sp, %d\n", updateStack - currStack);
             }
           break;
