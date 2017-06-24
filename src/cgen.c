@@ -88,7 +88,6 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
           // cmpd statement generation
           fprintf(codeStream, "\n# Compound statement for function\n");
           int updateStack = localCodeGen(t->attr.funcDecl.cmpd_stmt, codeStream, 10 * regSize);
-          if(updateStack == 0) break;
           if(updateStack != 10 * regSize)
             DONT_OCCUR_PRINT;
 
