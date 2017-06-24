@@ -325,7 +325,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           if(localCodeGen(t->attr.arr._var, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "add $v0, $v0, $s0\n");
-          fprintf(codeStream, "lw $v0, 0($fp)\n");
+          fprintf(codeStream, "lw $v0, 0($v0)\n");
           break;
         }
         case CallK:
