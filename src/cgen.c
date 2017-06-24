@@ -359,10 +359,14 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           switch(t->symbolInfo->nodeType)
             {
             case IntT:
-              fprintf(codeStream, "lw $v0, %d($fp)\n", t->symbolInfo->attr.intInfo.memloc);
+              fprintf(codeStream,
+                      t->symbolInfo->attr.intInfo.globalFlag ? "lw $v0, %d\n" : "lw $v0, %d($fp)\n",
+                      t->symbolInfo->attr.intInfo.memloc);
               break;
             case IntArrayT:
-              fprintf(codeStream, "addiu $v0, $fp, %d\n", t->symbolInfo->attr.intInfo.memloc);
+              fprintf(codeStream,
+                      t->symbolInfo->attr.arrInfo.globalFlag ? "li $v0, %d" : "addiu $v0, $fp, %d\n",
+                      t->symbolInfo->attr.intInfo.memloc);
               break;
             default:
               DONT_OCCUR_PRINT;
