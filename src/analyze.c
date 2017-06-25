@@ -12,6 +12,7 @@
 #include "symtab.h"
 #include "analyze.h"
 #include "symtab.h"
+#include "util.h"
 
 /* counter for variable memory locations */
 static int location = 0;
@@ -167,6 +168,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
 
 #define AlreadyPushedScope 2
 
+/* TODO: remove regNode, no need to use this argu */
 static int registerSymbol(TreeNode *regNode, TreeNode *varNode, SymbolInfo * symbolInfo)
 {
   int is_cur_scope;
@@ -361,11 +363,76 @@ static void mainCheck(TreeNode *t)
     }
 }
 
+/* register input(), output() functions for project4 
+   int input(void);
+   void output(int);
+*/
+static void registerIO(void)
+{
+  SymbolInfo *symbolInfo = NULL;
+  int registerSuccess = 0;
+  TreeNode* type_specifier, // return type of a function
+       *_var, // function name
+       *params, // parameters of a function
+       *compound_stmt, // body of a function, TODO: Do we need this?
+       *func_decl;
+
+  /* register int input(void) */
+  // set func_decl
+  type_specifier = newTokenTypeNode(INT);
+  _var = newVariableNode("input");
+  params = NULL;
+  compound_stmt = newCompoundStatementNode(
+                  /* local_declarations */NULL,
+                  /* statement_list */ NULL);
+  func_decl = newFunctionDeclarationNode(
+              type_specifier,
+              _var,
+              params,
+              compound_stmt);
+  // Register Symbol
+  MALLOC(symbolInfo, sizeof(*symbolInfo));
+  symbolInfo = setSymbolInfo(func_decl);
+  registerSymbol(func_decl, func_decl->attr.varDecl._var, symbolInfo);
+
+
+  /* register void input(int) */
+  type_specifier = newTokenTypeNode(INT);
+  _var = newVariableNode("output");
+  params = newVariableParameterNode(
+           /* type_spec */ newTokenTypeNode(INT),
+           /* _id */ newVariableNode("num")
+           );
+  compound_stmt = newCompoundStatementNode(
+                  /* local_declarations */NULL,
+                  /* statement_list */ NULL);
+  func_decl = newFunctionDeclarationNode(
+              type_specifier,
+              _var,
+              params,
+              compound_stmt);
+  // Register Symbol
+  MALLOC(symbolInfo, sizeof(*symbolInfo));
+  symbolInfo = setSymbolInfo(func_decl);
+  registerSymbol(func_decl, func_decl->attr.varDecl._var, symbolInfo);
+
+/*
+  symbolInfo->nodeType = FuncT;
+  symbolInfo->attr.funcInfo.retType = IntT;
+  symbolInfo->attr.funcInfo.paramTypeList = NULL;
+  symbolInfo->attr.funcInfo.paramLen = n_param;
+*/
+
+
+}
+
 /* Function buildSymtab constructs the symbol 
  * table by preorder traversal of the syntax tree
  */
 void buildSymtab(TreeNode * syntaxTree)
 {
+  registerIO();
+
   insertNode(syntaxTree, 0);
   printSymTab(listing);
   typeCheck(syntaxTree);
