@@ -74,7 +74,8 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
                   break;
                 case ArrayParameterK:
                   accLoc -= regSize;
-                  param->attr.arrParam._var->symbolInfo->attr.intInfo.memloc = accLoc;
+                  // TODO:
+                  param->attr.arrParam._var->symbolInfo->attr.arrInfo.memloc = accLoc;
                   break;
                 default:
                   DONT_OCCUR_PRINT;
@@ -169,11 +170,11 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         }
         case ArrayDeclarationK:
         {
-          int size = regSize;
+          int size = regSize * t->attr.varDecl._var->symbolInfo->attr.arrInfo.arrLen;
           fprintf(codeStream, "\n# Local array declaration\n");
           fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
-          currStack += size * t->attr.varDecl._var->symbolInfo->attr.arrInfo.arrLen;
-          t->attr.varDecl._var->symbolInfo->attr.arrInfo.memloc = -currStack;
+          t->attr.varDecl._var->symbolInfo->attr.arrInfo.memloc = -currStack-sizeof(int);
+          currStack += size;
           break;
         }
 
@@ -481,12 +482,14 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
             case IntArrayT:
               fprintf(codeStream,
                       t->symbolInfo->attr.arrInfo.globalFlag ? "li $v0, %d\n" : "addiu $v0, $fp, %d\n",
-                      t->symbolInfo->attr.intInfo.memloc);
+                      t->symbolInfo->attr.arrInfo.memloc);
               break;
             default:
               DONT_OCCUR_PRINT;
             }
-          break;
+
+          /* For fixing a bug about iteration of sibling in parameter passing. */
+          return currStack;//break;
         }
         case ConstantK:
         {

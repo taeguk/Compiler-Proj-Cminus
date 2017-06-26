@@ -397,7 +397,7 @@ static void registerIO(void)
   registerSymbol(func_decl, func_decl->attr.varDecl._var, symbolInfo);
 
 
-  /* register void input(int) */
+  /* register void output(int) */
   type_specifier = newTokenTypeNode(VOID);
   _var = newVariableNode("output");
   params = newVariableParameterNode(
