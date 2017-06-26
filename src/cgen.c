@@ -109,6 +109,9 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
           fprintf(codeStream, "\n# Stack cleanup\n");
           fprintf(codeStream, "L%d:\n", L_cleanup);
 
+          // cleanup remained local stack.
+          fprintf(codeStream, "addiu $sp, $fp, %d\n", -10 * regSize);
+
           // load registers
           fprintf(codeStream, "lw $fp, %d($sp)\n", 0 * regSize);
           // load registers $s0~$s7
@@ -178,6 +181,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           fprintf(codeStream, "\n# Compound Statement\n");
           int updateStack = currStack;
+
           updateStack = localCodeGen(t->attr.cmpdStmt.local_decl, codeStream, updateStack);
           if(localCodeGen(t->attr.cmpdStmt.stmt_list, codeStream, updateStack) != updateStack)
             DONT_OCCUR_PRINT;
@@ -185,11 +189,17 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           // stack cleanup
           if(updateStack < currStack)
             DONT_OCCUR_PRINT;
+
+          fprintf(codeStream, "\n# Local stack cleanup\n");
+          fprintf(codeStream, "addiu $sp, $sp, %d\n", updateStack - currStack);
+
+          /*
           if(updateStack > 0) // it does not have return stmt
             {
               fprintf(codeStream, "\n# Local stack cleanup\n");
               fprintf(codeStream, "addiu $sp, $sp, %d\n", updateStack - currStack);
             }
+          */
           break;
         }
         case ExpressionStatementK:
@@ -201,14 +211,17 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         case SelectionStatementK:
         {
           fprintf(codeStream, "\n# Selection Statement\n");
+          fprintf(codeStream, "# Selection Statement Expression\n");
           if(localCodeGen(t->attr.selectStmt.expr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
           int L_exit = labelAlloc(), L_false = labelAlloc();
           fprintf(codeStream, "beqz $v0, L%d\n", L_false);
+          fprintf(codeStream, "# Selection Statement If Statement\n");
           if(localCodeGen(t->attr.selectStmt.if_stmt, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "j L%d\n", L_exit);
           fprintf(codeStream, "L%d:\n", L_false);
+          fprintf(codeStream, "# Selection Statement Else Statement\n");
           if(localCodeGen(t->attr.selectStmt.else_stmt, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "L%d:\n", L_exit);
@@ -220,9 +233,11 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           int L_cmp = labelAlloc(), L_loop = labelAlloc();
           fprintf(codeStream, "j L%d\n", L_cmp);
           fprintf(codeStream, "L%d:\n", L_loop);
+          fprintf(codeStream, "# Iteration Statement Loop Statement\n");
           if(localCodeGen(t->attr.iterStmt.loop_stmt, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "L%d:\n", L_cmp);
+          fprintf(codeStream, "# Iteration Statement Expression\n");
           if(localCodeGen(t->attr.iterStmt.expr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "bnez $v0, L%d\n", L_loop);
@@ -245,6 +260,8 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               DONT_OCCUR_PRINT;
 
           fprintf(codeStream, "j L%d\n", L_cleanup);
+
+          break;
 
           /*
           // cleanup
@@ -271,7 +288,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           */
 
           // Optimization: do not need to check other stmts
-          return 0;
+          //return 0;
         }
 
         case AssignExpressionK:
@@ -430,10 +447,12 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
 
                   if(localCodeGen(expr, codeStream, currStack + accLoc) != (currStack + accLoc))
                     DONT_OCCUR_PRINT;
+
                   fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
                   fprintf(codeStream, "sw $v0, 0($sp)\n");
                   accLoc += size;
                 }
+              fprintf(codeStream, "jal %s\n", t->attr.call._var->attr.ID);
               fprintf(codeStream, "addiu $sp, $sp, %d\n", accLoc);
             }
           break;
