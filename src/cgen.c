@@ -396,18 +396,6 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           break;
         }
 
-        case ArrayK:
-        {
-          if(localCodeGen(t->attr.arr.arr_expr, codeStream, currStack) != currStack)
-            DONT_OCCUR_PRINT;
-          fprintf(codeStream, "li $s0, %lu\n", sizeof(int));
-          fprintf(codeStream, "mul $s0, $v0, $s0\n");
-          if(localCodeGen(t->attr.arr._var, codeStream, currStack) != currStack)
-            DONT_OCCUR_PRINT;
-          fprintf(codeStream, "add $v0, $v0, $s0\n");
-          fprintf(codeStream, "lw $v0, 0($v0)\n");
-          break;
-        }
         case CallK:
         {
           int accLoc = 0, i;
@@ -470,6 +458,20 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           break;
         }
 
+        case ArrayK:
+        {
+          if(localCodeGen(t->attr.arr.arr_expr, codeStream, currStack) != currStack)
+            DONT_OCCUR_PRINT;
+          fprintf(codeStream, "li $s0, %lu\n", sizeof(int));
+          fprintf(codeStream, "mul $s0, $v0, $s0\n");
+          if(localCodeGen(t->attr.arr._var, codeStream, currStack) != currStack)
+            DONT_OCCUR_PRINT;
+          fprintf(codeStream, "add $v0, $v0, $s0\n");
+          fprintf(codeStream, "lw $v0, 0($v0)\n");
+          
+          /* For fixing a bug about iteration of sibling in parameter passing. */
+          return currStack;//break;
+        }
         case VariableK:
         {
           switch(t->symbolInfo->nodeType)
@@ -483,6 +485,8 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               fprintf(codeStream,
                       t->symbolInfo->attr.arrInfo.globalFlag ? "li $v0, %d\n" : "addiu $v0, $fp, %d\n",
                       t->symbolInfo->attr.arrInfo.memloc);
+              if (t->symbolInfo->attr.arrInfo.isParam)
+                fprintf(codeStream, "lw $v0, 0($v0)\n");
               break;
             default:
               DONT_OCCUR_PRINT;
@@ -494,7 +498,9 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         case ConstantK:
         {
           fprintf(codeStream, "li $v0, %d\n", t->attr.TOK);
-          break;
+          
+          /* For fixing a bug about iteration of sibling in parameter passing. */
+          return currStack;//break;
         }
 
         default:
