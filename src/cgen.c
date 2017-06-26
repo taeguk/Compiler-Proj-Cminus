@@ -357,25 +357,61 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           int accLoc = 0, i;
           TreeNode *expr;
-          for(expr = t->attr.call.expr_list, i = 0;
-              expr != NULL;
-              expr = expr->sibling, i++)
+          if (!strcmp(t->attr.call._var->attr.ID, "input"))
             {
-              int size;
-              switch(t->attr.call._var->symbolInfo->attr.funcInfo.paramTypeList[i])
-                {
-                case IntT: size = sizeof(int); break;
-                case IntArrayT: size = regSize; break;
-                default: DONT_OCCUR_PRINT;
-                }
-
-              if(localCodeGen(expr, codeStream, currStack + accLoc) != (currStack + accLoc))
-                DONT_OCCUR_PRINT;
-              fprintf(codeStream, "addiu, $sp, $sp, %d\n", -size);
-              fprintf(codeStream, "sw $v0, 0($sp)\n");
-              accLoc += size;
+              // print "input : "
+              fprintf(codeStream, "\n# input\n");
+              fprintf(codeStream, "move $t0, $v0\n");
+              fprintf(codeStream, "li $v0, 4\n");
+              fprintf(codeStream, "la $a0, input_str\n");
+              fprintf(codeStream, "syscall\n");
+              // read_int
+              fprintf(codeStream, "li $v0, 5\n");
+              fprintf(codeStream, "syscall\n");
+              fprintf(codeStream, "move $v0, $t0\n");
             }
-          fprintf(codeStream, "addiu, $sp, $sp, %d\n", accLoc);
+          else if (!strcmp(t->attr.call._var->attr.ID, "output"))
+            {
+              // print "output : "
+              fprintf(codeStream, "\n# output\n");
+              fprintf(codeStream, "move $t0, $v0\n");
+              fprintf(codeStream, "li $v0, 4\n");
+              fprintf(codeStream, "la $a0, output_str\n");
+              fprintf(codeStream, "syscall\n");
+              fprintf(codeStream, "move $v0, $t0\n");
+              // print_int
+              if (localCodeGen(t->attr.call.expr_list, codeStream, currStack + accLoc) != (currStack + accLoc))
+                DONT_OCCUR_PRINT;
+              fprintf(codeStream, "move $a0, $v0\n"); // the argument
+              fprintf(codeStream, "li $v0, 1\n");
+              fprintf(codeStream, "syscall\n");
+              // print newline
+              fprintf(codeStream, "li $v0, 4\n");
+              fprintf(codeStream, "la $a0, newline\n");
+              fprintf(codeStream, "syscall\n");
+            }
+          else
+            {
+              for(expr = t->attr.call.expr_list, i = 0;
+                  expr != NULL;
+                  expr = expr->sibling, i++)
+                {
+                  int size;
+                  switch(t->attr.call._var->symbolInfo->attr.funcInfo.paramTypeList[i])
+                    {
+                    case IntT: size = sizeof(int); break;
+                    case IntArrayT: size = regSize; break;
+                    default: DONT_OCCUR_PRINT;
+                    }
+
+                  if(localCodeGen(expr, codeStream, currStack + accLoc) != (currStack + accLoc))
+                    DONT_OCCUR_PRINT;
+                  fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
+                  fprintf(codeStream, "sw $v0, 0($sp)\n");
+                  accLoc += size;
+                }
+              fprintf(codeStream, "addiu $sp, $sp, %d\n", accLoc);
+            }
           break;
         }
 
