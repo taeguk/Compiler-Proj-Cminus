@@ -8,6 +8,8 @@ static int globalMemAlloc(int);
 static int labelAlloc(void);
 static int localCodeGen(TreeNode *, FILE *, int);
 
+static int L_cleanup;
+
 // Global decls
 void codeGen(TreeNode *syntaxTree, FILE *codeStream)
 {
@@ -94,6 +96,8 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
           // set frame
           fprintf(codeStream, "addiu $fp, $sp, %d\n", 10 * regSize);
 
+          L_cleanup = labelAlloc();
+
           // cmpd statement generation
           fprintf(codeStream, "\n# Compound statement for function\n");
           int updateStack = localCodeGen(t->attr.funcDecl.cmpd_stmt, codeStream, 10 * regSize);
@@ -102,6 +106,7 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
 
           // cleanup for function with no return
           fprintf(codeStream, "\n# Stack cleanup\n");
+          fprintf(codeStream, "L%d:\n", L_cleanup);
 
           // load registers
           fprintf(codeStream, "lw $fp, %d($sp)\n", 0 * regSize);
@@ -162,7 +167,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           int size = regSize;
           fprintf(codeStream, "\n# Local array declaration\n");
           fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
-          currStack += size;
+          currStack += size * t->attr.varDecl._var->symbolInfo->attr.arrInfo.arrLen;
           t->attr.varDecl._var->symbolInfo->attr.arrInfo.memloc = -currStack;
           break;
         }
@@ -237,6 +242,9 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
             if(localCodeGen(t->attr.retStmt.expr, codeStream, currStack) != currStack)
               DONT_OCCUR_PRINT;
 
+          fprintf(codeStream, "j L%d\n", L_cleanup);
+
+          /*
           // cleanup
           fprintf(codeStream, "\n# Stack cleanup\n");
 
@@ -258,6 +266,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           // return
           fprintf(codeStream, "\n# Return to caller\n");
           fprintf(codeStream, "jr $ra\n\n");
+          */
 
           // Optimization: do not need to check other stmts
           return 0;
