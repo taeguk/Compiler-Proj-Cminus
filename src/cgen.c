@@ -29,13 +29,14 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
     {
       if(t->nodeKind == VariableDeclarationK)
         {
-          t->symbolInfo->attr.intInfo.memloc = globalMemAlloc(sizeof(int));
-          t->symbolInfo->attr.intInfo.globalFlag = TRUE;
+          t->attr.varDecl._var->symbolInfo->attr.intInfo.memloc = globalMemAlloc(sizeof(int));
+          t->attr.varDecl._var->symbolInfo->attr.intInfo.globalFlag = TRUE;
         }
       else if(t->nodeKind == ArrayDeclarationK)
         {
-          t->symbolInfo->attr.arrInfo.memloc = globalMemAlloc(sizeof(int) * t->symbolInfo->attr.arrInfo.arrLen);
-          t->symbolInfo->attr.arrInfo.globalFlag = FALSE;
+          t->attr.arrDecl._var->symbolInfo->attr.arrInfo.memloc =
+            globalMemAlloc(sizeof(int) * t->attr.arrDecl._var->symbolInfo->attr.arrInfo.arrLen);
+          t->attr.arrDecl._var->symbolInfo->attr.arrInfo.globalFlag = TRUE;
         }
       else if(t->nodeKind == FunctionDeclarationK)
         {
@@ -156,6 +157,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         case VariableDeclarationK:
         {
           int size = sizeof(int);
+
           fprintf(codeStream, "\n# Local variable declaration\n");
           fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
           currStack += size;
@@ -276,7 +278,22 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           if(localCodeGen(t->attr.assignStmt.expr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
-          fprintf(codeStream, "sw $v0, %d($fp)\n", t->attr.assignStmt._var->symbolInfo->attr.intInfo.memloc);
+          if (t->attr.assignStmt._var->nodeKind == VariableK)
+            {
+              fprintf(codeStream,
+                      t->attr.assignStmt._var->symbolInfo->attr.intInfo.globalFlag ?
+                      "sw $v0, %d\n" : "sw $v0, %d($fp)\n",
+                      t->attr.assignStmt._var->symbolInfo->attr.intInfo.memloc);
+            }
+          else if (t->attr.assignStmt._var->nodeKind == ArrayK)
+            {
+              fprintf(codeStream, "move $s0, $v0\n");
+              if(localCodeGen(t->attr.assignStmt.expr, codeStream, currStack) != currStack)
+                DONT_OCCUR_PRINT;
+              fprintf(codeStream, "sw $s0, 0($v0)\n");
+            }
+          else
+            DONT_OCCUR_PRINT;
           break;
         }
         case ComparisonExpressionK:
@@ -370,14 +387,12 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
             {
               // print "input : "
               fprintf(codeStream, "\n# input\n");
-              fprintf(codeStream, "move $t0, $v0\n");
               fprintf(codeStream, "li $v0, 4\n");
               fprintf(codeStream, "la $a0, input_str\n");
               fprintf(codeStream, "syscall\n");
               // read_int
               fprintf(codeStream, "li $v0, 5\n");
               fprintf(codeStream, "syscall\n");
-              fprintf(codeStream, "move $v0, $t0\n");
             }
           else if (!strcmp(t->attr.call._var->attr.ID, "output"))
             {
@@ -435,7 +450,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               break;
             case IntArrayT:
               fprintf(codeStream,
-                      t->symbolInfo->attr.arrInfo.globalFlag ? "li $v0, %d" : "addiu $v0, $fp, %d\n",
+                      t->symbolInfo->attr.arrInfo.globalFlag ? "li $v0, %d\n" : "addiu $v0, $fp, %d\n",
                       t->symbolInfo->attr.intInfo.memloc);
               break;
             default:
