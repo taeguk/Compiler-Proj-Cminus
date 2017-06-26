@@ -447,6 +447,8 @@ void buildSymtab(TreeNode * syntaxTree)
   */
 }
 
+static ExpType expectedRetType;
+
 /* Procedure typeCheck performs type evaluation
  * by syntax tree traversal
  */
@@ -490,9 +492,9 @@ ExpType typeCheck(TreeNode *n)
           if(cmpdStmt != NULL)
             {
               if(t->attr.arrDecl.type_spec->attr.TOK == INT)
-                cmpdStmt->attr.cmpdStmt.retType = IntT;
+                expectedRetType = IntT; //cmpdStmt->attr.cmpdStmt.retType = IntT;
               else if(t->attr.arrDecl.type_spec->attr.TOK == VOID)
-                cmpdStmt->attr.cmpdStmt.retType = VoidT;
+                expectedRetType = VoidT; // cmpdStmt->attr.cmpdStmt.retType = VoidT;
               else
                 DONT_OCCUR_PRINT;
               typeCheck(cmpdStmt);
@@ -528,6 +530,7 @@ ExpType typeCheck(TreeNode *n)
 
         case CompoundStatementK:
         {
+          /*
           // Propagate return type for return statement
           TreeNode *stmt;
           for(stmt = t->attr.cmpdStmt.stmt_list;
@@ -544,6 +547,7 @@ ExpType typeCheck(TreeNode *n)
                   stmt->attr.cmpdStmt.retType = t->attr.cmpdStmt.retType;
                 }
             }
+          */
 
           typeCheck(t->attr.cmpdStmt.local_decl);
           typeCheck(t->attr.cmpdStmt.stmt_list);
@@ -585,8 +589,8 @@ ExpType typeCheck(TreeNode *n)
 
         case ReturnStatementK:
         {
-          if(t->attr.retStmt.retType != IntT
-             && t->attr.retStmt.retType != VoidT)
+          if(expectedRetType == VoidT/*t->attr.retStmt.retType != IntT
+             && t->attr.retStmt.retType != VoidT*/)
             {
               DONT_OCCUR_PRINT;
               t->nodeType = ErrorT;
@@ -594,7 +598,7 @@ ExpType typeCheck(TreeNode *n)
           else
             {
               ExpType type = typeCheck(t->attr.retStmt.expr);
-              if(type != t->attr.retStmt.retType)
+              if(type != expectedRetType/*t->attr.retStmt.retType*/)
                 {
                   printError(t, "Type", "Returning expression must match pre-declared function return type.");
                   t->nodeType = ErrorT;
