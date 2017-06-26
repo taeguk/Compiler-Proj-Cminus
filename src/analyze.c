@@ -142,7 +142,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             return NULL;
           }
         symbolInfo->nodeType = IntT;
-        symbolInfo->attr.intInfo.isParam = 1;
+        symbolInfo->attr.intInfo.isParam = TRUE;
         break;
 
 
@@ -153,7 +153,7 @@ static SymbolInfo * setSymbolInfo (TreeNode *t)
             return NULL;
           }
         symbolInfo->nodeType = IntArrayT;
-        symbolInfo->attr.intInfo.isParam = 1;
+        symbolInfo->attr.intInfo.isParam = TRUE;
         break;
 
       default:
@@ -393,15 +393,16 @@ static void registerIO(void)
   // Register Symbol
   MALLOC(symbolInfo, sizeof(*symbolInfo));
   symbolInfo = setSymbolInfo(func_decl);
+  _var->lineno = -1;
   registerSymbol(func_decl, func_decl->attr.varDecl._var, symbolInfo);
 
 
   /* register void input(int) */
-  type_specifier = newTokenTypeNode(INT);
+  type_specifier = newTokenTypeNode(VOID);
   _var = newVariableNode("output");
   params = newVariableParameterNode(
            /* type_spec */ newTokenTypeNode(INT),
-           /* _id */ newVariableNode("num")
+           /* _id */ newVariableNode("")
            );
   compound_stmt = newCompoundStatementNode(
                   /* local_declarations */NULL,
@@ -414,6 +415,7 @@ static void registerIO(void)
   // Register Symbol
   MALLOC(symbolInfo, sizeof(*symbolInfo));
   symbolInfo = setSymbolInfo(func_decl);
+  _var->lineno = -1;
   registerSymbol(func_decl, func_decl->attr.varDecl._var, symbolInfo);
 
 /*
@@ -493,8 +495,9 @@ ExpType typeCheck(TreeNode *n)
                 cmpdStmt->attr.cmpdStmt.retType = VoidT;
               else
                 DONT_OCCUR_PRINT;
-              typeCheck(t->attr.funcDecl.cmpd_stmt);
+              typeCheck(cmpdStmt);
             }
+          typeCheck(t->attr.funcDecl.params);
           t->nodeType = NoneT;
         }
           break;
@@ -507,7 +510,7 @@ ExpType typeCheck(TreeNode *n)
             }
           else
             {
-              t->nodeType = NoneT;
+              t->nodeType = IntT;
             }
           break;
 
@@ -519,7 +522,7 @@ ExpType typeCheck(TreeNode *n)
             }
           else
             {
-              t->nodeType = NoneT;
+              t->nodeType = IntArrayT;
             }
           break;
 
@@ -733,6 +736,7 @@ ExpType typeCheck(TreeNode *n)
                       isError = TRUE;
                       break;
                     }
+                  // TODO: checking filetype with symbolInfo?
                   if(typeCheck(expr) != info->attr.funcInfo.paramTypeList[exprIdx])
                     {
                       printError(t,

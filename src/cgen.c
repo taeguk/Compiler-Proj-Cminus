@@ -1,5 +1,6 @@
 #include "globals.h"
 #include "cgen.h"
+#include <string.h>
 
 static int regSize = 4;
 
@@ -12,6 +13,14 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
 {
   int i;
   TreeNode *t;
+
+  fprintf(codeStream, ".data\n");
+  fprintf(codeStream, "newline: .asciiz \"\\n\"\n");
+  fprintf(codeStream, "output_str: .asciiz \"Output : \"\n");
+  fprintf(codeStream, "input_str: .asciiz \"Input : \"\n");
+
+
+  fprintf(codeStream, "\n.text\n");
   for(t = syntaxTree;
       t != NULL;
       t = t->sibling)
@@ -162,11 +171,9 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           fprintf(codeStream, "\n# Compound Statement\n");
           int updateStack = currStack;
-          TreeNode *decl;
-          for(decl = t->attr.cmpdStmt.local_decl;
-              decl != NULL;
-              decl = decl->sibling)
-            updateStack = localCodeGen(decl, codeStream, updateStack);
+          updateStack = localCodeGen(t->attr.cmpdStmt.local_decl, codeStream, updateStack);
+          if(localCodeGen(t->attr.cmpdStmt.stmt_list, codeStream, updateStack) != updateStack)
+            DONT_OCCUR_PRINT;
 
           // stack cleanup
           if(updateStack < currStack)
@@ -267,17 +274,24 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           if(localCodeGen(t->attr.cmpExpr.lexpr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
-          fprintf(codeStream, "move $s0, $v0\n");
+          fprintf(codeStream, "addiu $sp, $sp, -%lu\n", sizeof(int));
+          fprintf(codeStream, "sw $v0, 0($sp)\n");
+          currStack += sizeof(int);
+
           if(localCodeGen(t->attr.cmpExpr.rexpr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
+          fprintf(codeStream, "lw $s0, 0($sp)\n");
+          fprintf(codeStream, "addiu $sp, $sp, %lu\n", sizeof(int));
+          currStack -= sizeof(int);
+
           switch(t->attr.cmpExpr.op->attr.TOK)
             {
-            case LT: fprintf(codeStream, "slt $v0, $s0, $v0"); break;
-            case LE: fprintf(codeStream, "sle $v0, $s0, $v0"); break;
-            case GT: fprintf(codeStream, "sgt $v0, $s0, $v0"); break;
-            case GE: fprintf(codeStream, "sge $v0, $s0, $v0"); break;
-            case EQ: fprintf(codeStream, "seq $v0, $s0, $v0"); break;
-            case NE: fprintf(codeStream, "sne $v0, $s0, $v0"); break;
+            case LT: fprintf(codeStream, "slt $v0, $s0, $v0\n"); break;
+            case LE: fprintf(codeStream, "sle $v0, $s0, $v0\n"); break;
+            case GT: fprintf(codeStream, "sgt $v0, $s0, $v0\n"); break;
+            case GE: fprintf(codeStream, "sge $v0, $s0, $v0\n"); break;
+            case EQ: fprintf(codeStream, "seq $v0, $s0, $v0\n"); break;
+            case NE: fprintf(codeStream, "sne $v0, $s0, $v0\n"); break;
             default: DONT_OCCUR_PRINT;
             }
           break;
@@ -286,13 +300,20 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           if(localCodeGen(t->attr.addExpr.lexpr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
-          fprintf(codeStream, "move $s0, $v0\n");
+          fprintf(codeStream, "addiu $sp, $sp, -%lu\n", sizeof(int));
+          fprintf(codeStream, "sw $v0, 0($sp)\n");
+          currStack += sizeof(int);
+
           if(localCodeGen(t->attr.addExpr.rexpr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
+          fprintf(codeStream, "lw $s0, 0($sp)\n");
+          fprintf(codeStream, "addiu $sp, $sp, %lu\n", sizeof(int));
+          currStack -= sizeof(int);
+
           switch(t->attr.addExpr.op->attr.TOK)
             {
-            case PLUS: fprintf(codeStream, "add $v0, $s0, $v0"); break;
-            case MINUS: fprintf(codeStream, "sub $v0, $s0, $v0"); break;
+            case PLUS: fprintf(codeStream, "add $v0, $s0, $v0\n"); break;
+            case MINUS: fprintf(codeStream, "sub $v0, $s0, $v0\n"); break;
             default: DONT_OCCUR_PRINT;
             }
           break;
@@ -301,13 +322,20 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           if(localCodeGen(t->attr.multExpr.lexpr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
-          fprintf(codeStream, "move $s0, $v0\n");
+          fprintf(codeStream, "addiu $sp, $sp, -%lu\n", sizeof(int));
+          fprintf(codeStream, "sw $v0, 0($sp)\n");
+          currStack += sizeof(int);
+
           if(localCodeGen(t->attr.multExpr.rexpr, codeStream, currStack) != currStack)
             DONT_OCCUR_PRINT;
+          fprintf(codeStream, "lw $s0, 0($sp)\n");
+          fprintf(codeStream, "addiu $sp, $sp, %lu\n", sizeof(int));
+          currStack -= sizeof(int);
+
           switch(t->attr.multExpr.op->attr.TOK)
             {
-            case TIMES: fprintf(codeStream, "mul $v0, $s0, $v0"); break;
-            case OVER: fprintf(codeStream, "div $v0, $s0, $v0"); break;
+            case TIMES: fprintf(codeStream, "mul $v0, $s0, $v0\n"); break;
+            case OVER: fprintf(codeStream, "div $v0, $s0, $v0\n"); break;
             default: DONT_OCCUR_PRINT;
             }
           break;
