@@ -304,10 +304,21 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
             }
           else if (t->attr.assignStmt._var->nodeKind == ArrayK)
             {
-              fprintf(codeStream, "move $s0, $v0\n");
-              if(localCodeGen(t->attr.assignStmt.expr, codeStream, currStack) != currStack)
-                DONT_OCCUR_PRINT;
-              fprintf(codeStream, "sw $s0, 0($v0)\n");
+              fprintf(codeStream, "move $s1, $v0\n");
+              {
+                TreeNode* arr = t->attr.assignStmt._var;
+                if(localCodeGen(arr->attr.arr.arr_expr, codeStream, currStack) != currStack)
+                  DONT_OCCUR_PRINT;
+                fprintf(codeStream, "li $s0, %lu\n", sizeof(int));
+                fprintf(codeStream, "mul $s0, $v0, $s0\n");
+                if(localCodeGen(arr->attr.arr._var, codeStream, currStack) != currStack)
+                  DONT_OCCUR_PRINT;
+                fprintf(codeStream, "add $v0, $v0, $s0\n");
+              }
+              /*
+              if(localCodeGen(t->attr.assignStmt._var, codeStream, currStack) != currStack)
+                DONT_OCCUR_PRINT;*/
+              fprintf(codeStream, "sw $s1, 0($v0)\n");
             }
           else
             DONT_OCCUR_PRINT;
