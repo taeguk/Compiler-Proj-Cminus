@@ -63,8 +63,29 @@ void checkGlobalA(void)
 void main(void)
 {
   int a;
+  int b;
+  int c;
   int arr[3];
-  
+  int testArr[50];
+
+  testArr[(a = input()) * 2] 
+    = c
+    = arr[0] 
+    = testArr[(b = input()) * 3]
+    = c
+    = arr[0]
+    = arr[0]
+    = testArr[0]
+    = input();
+
+  output(a);
+  output(b);
+  output(c);
+  output(arr[0]);
+  output(testArr[0]);
+  output(testArr[a*2]);
+  output(testArr[b*3]);
+
   arr[0] = a = input();
   arr[1] = input();
   arr[2] = input();
@@ -148,7 +169,7 @@ void main(void)
     }
 
 
-  globalA = 10;
+  globalA = 3;
   while (globalA)
     {
       checkGlobalA();
