@@ -173,7 +173,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           int size = regSize * t->attr.varDecl._var->symbolInfo->attr.arrInfo.arrLen;
           fprintf(codeStream, "\n# Local array declaration\n");
           fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
-          t->attr.varDecl._var->symbolInfo->attr.arrInfo.memloc = -currStack-sizeof(int);
+          t->attr.varDecl._var->symbolInfo->attr.arrInfo.memloc = -currStack-size;
           currStack += size;
           break;
         }
@@ -320,6 +320,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               if(localCodeGen(t->attr.assignStmt._var, codeStream, currStack) != currStack)
                 DONT_OCCUR_PRINT;*/
               fprintf(codeStream, "sw $s1, 0($v0)\n");
+              fprintf(codeStream, "move $v0, $s1\n");
             }
           else
             DONT_OCCUR_PRINT;
@@ -455,7 +456,9 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               fprintf(codeStream, "jal %s\n", t->attr.call._var->attr.ID);
               fprintf(codeStream, "addiu $sp, $sp, %d\n", accLoc);
             }
-          break;
+
+          /* For fixing a bug about iteration of sibling in parameter passing. */
+          return currStack;//break;
         }
 
         case ArrayK:
