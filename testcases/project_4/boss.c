@@ -39,6 +39,7 @@ int polynomial(int n, int arr[], int x)
       n = n-1;
       res = res * x + arr[n];
     }
+  return res;
 }
 
 void helloGlobal(int globalA, int b)
@@ -86,7 +87,7 @@ void main(void)
     {
       int a;
       int b;
-      int globaA;
+      int globalA;
 
       globalA = 5;
     }
