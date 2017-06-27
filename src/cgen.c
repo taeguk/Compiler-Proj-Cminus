@@ -500,7 +500,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         }
         case ConstantK:
         {
-          fprintf(codeStream, "li $v0, %d\n", t->attr.TOK);
+          fprintf(codeStream, "li $v0, %d\n", t->attr.NUM);
           
           /* For fixing a bug about iteration of sibling in parameter passing. */
           return currStack;//break;
