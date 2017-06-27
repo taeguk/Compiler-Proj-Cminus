@@ -6,7 +6,7 @@ static int regSize = 4;
 
 static int globalMemAlloc(int);
 static int labelAlloc(void);
-static int localCodeGen(TreeNode *, FILE *, int);
+static int localCodeGen(TreeNode *, FILE *, int, int);
 
 static int L_cleanup;
 
@@ -102,7 +102,7 @@ void codeGen(TreeNode *syntaxTree, FILE *codeStream)
 
           // cmpd statement generation
           fprintf(codeStream, "\n# Compound statement for function\n");
-          int updateStack = localCodeGen(t->attr.funcDecl.cmpd_stmt, codeStream, 10 * regSize);
+          int updateStack = localCodeGen(t->attr.funcDecl.cmpd_stmt, codeStream, 10 * regSize, 1);
           if(updateStack != 10 * regSize)
             DONT_OCCUR_PRINT;
 
@@ -148,12 +148,12 @@ static int labelAlloc(void)
 }
 
 // Local decls
-static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
+static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack, int travSibling)
 {
   TreeNode *t;
   for(t = syntaxTree;
       t != NULL;
-      t = t->sibling)
+      t = travSibling ? t->sibling : NULL)
     {
       switch (t->nodeKind)
         {
@@ -183,8 +183,8 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           fprintf(codeStream, "\n# Compound Statement\n");
           int updateStack = currStack;
 
-          updateStack = localCodeGen(t->attr.cmpdStmt.local_decl, codeStream, updateStack);
-          if(localCodeGen(t->attr.cmpdStmt.stmt_list, codeStream, updateStack) != updateStack)
+          updateStack = localCodeGen(t->attr.cmpdStmt.local_decl, codeStream, updateStack, 1);
+          if(localCodeGen(t->attr.cmpdStmt.stmt_list, codeStream, updateStack, 1) != updateStack, 1)
             DONT_OCCUR_PRINT;
 
           // stack cleanup
@@ -205,7 +205,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         }
         case ExpressionStatementK:
         {
-          if(localCodeGen(t->attr.exprStmt.expr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.exprStmt.expr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           break;
         }
@@ -213,17 +213,17 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         {
           fprintf(codeStream, "\n# Selection Statement\n");
           fprintf(codeStream, "# Selection Statement Expression\n");
-          if(localCodeGen(t->attr.selectStmt.expr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.selectStmt.expr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           int L_exit = labelAlloc(), L_false = labelAlloc();
           fprintf(codeStream, "beqz $v0, L%d\n", L_false);
           fprintf(codeStream, "# Selection Statement If Statement\n");
-          if(localCodeGen(t->attr.selectStmt.if_stmt, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.selectStmt.if_stmt, codeStream, currStack, 1) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "j L%d\n", L_exit);
           fprintf(codeStream, "L%d:\n", L_false);
           fprintf(codeStream, "# Selection Statement Else Statement\n");
-          if(localCodeGen(t->attr.selectStmt.else_stmt, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.selectStmt.else_stmt, codeStream, currStack, 1) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "L%d:\n", L_exit);
           break;
@@ -235,11 +235,11 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           fprintf(codeStream, "j L%d\n", L_cmp);
           fprintf(codeStream, "L%d:\n", L_loop);
           fprintf(codeStream, "# Iteration Statement Loop Statement\n");
-          if(localCodeGen(t->attr.iterStmt.loop_stmt, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.iterStmt.loop_stmt, codeStream, currStack, 1) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "L%d:\n", L_cmp);
           fprintf(codeStream, "# Iteration Statement Expression\n");
-          if(localCodeGen(t->attr.iterStmt.expr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.iterStmt.expr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "bnez $v0, L%d\n", L_loop);
           break;
@@ -257,7 +257,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
           //   return 0;
           // }
           if(t->attr.retStmt.expr != NULL)
-            if(localCodeGen(t->attr.retStmt.expr, codeStream, currStack) != currStack)
+            if(localCodeGen(t->attr.retStmt.expr, codeStream, currStack, 0) != currStack)
               DONT_OCCUR_PRINT;
 
           fprintf(codeStream, "j L%d\n", L_cleanup);
@@ -294,7 +294,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
 
         case AssignExpressionK:
         {
-          if(localCodeGen(t->attr.assignStmt.expr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.assignStmt.expr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           if (t->attr.assignStmt._var->nodeKind == VariableK)
             {
@@ -308,11 +308,11 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               fprintf(codeStream, "move $s1, $v0\n");
               {
                 TreeNode* arr = t->attr.assignStmt._var;
-                if(localCodeGen(arr->attr.arr.arr_expr, codeStream, currStack) != currStack)
+                if(localCodeGen(arr->attr.arr.arr_expr, codeStream, currStack, 0) != currStack)
                   DONT_OCCUR_PRINT;
                 fprintf(codeStream, "li $s0, %lu\n", sizeof(int));
                 fprintf(codeStream, "mul $s0, $v0, $s0\n");
-                if(localCodeGen(arr->attr.arr._var, codeStream, currStack) != currStack)
+                if(localCodeGen(arr->attr.arr._var, codeStream, currStack, 0) != currStack)
                   DONT_OCCUR_PRINT;
                 fprintf(codeStream, "add $v0, $v0, $s0\n");
               }
@@ -328,13 +328,13 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         }
         case ComparisonExpressionK:
         {
-          if(localCodeGen(t->attr.cmpExpr.lexpr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.cmpExpr.lexpr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "addiu $sp, $sp, -%lu\n", sizeof(int));
           fprintf(codeStream, "sw $v0, 0($sp)\n");
           currStack += sizeof(int);
 
-          if(localCodeGen(t->attr.cmpExpr.rexpr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.cmpExpr.rexpr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "lw $s0, 0($sp)\n");
           fprintf(codeStream, "addiu $sp, $sp, %lu\n", sizeof(int));
@@ -354,13 +354,13 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
         }
         case AdditiveExpressionK:
         {
-          if(localCodeGen(t->attr.addExpr.lexpr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.addExpr.lexpr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "addiu $sp, $sp, -%lu\n", sizeof(int));
           fprintf(codeStream, "sw $v0, 0($sp)\n");
           currStack += sizeof(int);
 
-          if(localCodeGen(t->attr.addExpr.rexpr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.addExpr.rexpr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "lw $s0, 0($sp)\n");
           fprintf(codeStream, "addiu $sp, $sp, %lu\n", sizeof(int));
@@ -373,16 +373,17 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
             default: DONT_OCCUR_PRINT;
             }
           break;
+          //return currStack; //break;
         }
         case MultiplicativeExpressionK:
         {
-          if(localCodeGen(t->attr.multExpr.lexpr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.multExpr.lexpr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "addiu $sp, $sp, -%lu\n", sizeof(int));
           fprintf(codeStream, "sw $v0, 0($sp)\n");
           currStack += sizeof(int);
 
-          if(localCodeGen(t->attr.multExpr.rexpr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.multExpr.rexpr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "lw $s0, 0($sp)\n");
           fprintf(codeStream, "addiu $sp, $sp, %lu\n", sizeof(int));
@@ -422,7 +423,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               fprintf(codeStream, "syscall\n");
               fprintf(codeStream, "move $v0, $t0\n");
               // print_int
-              if (localCodeGen(t->attr.call.expr_list, codeStream, currStack + accLoc) != (currStack + accLoc))
+              if (localCodeGen(t->attr.call.expr_list, codeStream, currStack + accLoc, 1) != (currStack + accLoc))
                 DONT_OCCUR_PRINT;
               fprintf(codeStream, "move $a0, $v0\n"); // the argument
               fprintf(codeStream, "li $v0, 1\n");
@@ -446,7 +447,7 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
                     default: DONT_OCCUR_PRINT;
                     }
 
-                  if(localCodeGen(expr, codeStream, currStack + accLoc) != (currStack + accLoc))
+                  if(localCodeGen(expr, codeStream, currStack + accLoc, 0) != (currStack + accLoc))
                     DONT_OCCUR_PRINT;
 
                   fprintf(codeStream, "addiu $sp, $sp, %d\n", -size);
@@ -457,23 +458,25 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               fprintf(codeStream, "addiu $sp, $sp, %d\n", accLoc);
             }
 
+          break;
           /* For fixing a bug about iteration of sibling in parameter passing. */
-          return currStack;//break;
+          //return currStack;//break;
         }
 
         case ArrayK:
         {
-          if(localCodeGen(t->attr.arr.arr_expr, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.arr.arr_expr, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "li $s0, %lu\n", sizeof(int));
           fprintf(codeStream, "mul $s0, $v0, $s0\n");
-          if(localCodeGen(t->attr.arr._var, codeStream, currStack) != currStack)
+          if(localCodeGen(t->attr.arr._var, codeStream, currStack, 0) != currStack)
             DONT_OCCUR_PRINT;
           fprintf(codeStream, "add $v0, $v0, $s0\n");
           fprintf(codeStream, "lw $v0, 0($v0)\n");
           
+          break;
           /* For fixing a bug about iteration of sibling in parameter passing. */
-          return currStack;//break;
+          //return currStack;//break;
         }
         case VariableK:
         {
@@ -495,15 +498,17 @@ static int localCodeGen(TreeNode *syntaxTree, FILE *codeStream, int currStack)
               DONT_OCCUR_PRINT;
             }
 
+          break;
           /* For fixing a bug about iteration of sibling in parameter passing. */
-          return currStack;//break;
+          //return currStack;//break;
         }
         case ConstantK:
         {
           fprintf(codeStream, "li $v0, %d\n", t->attr.NUM);
           
+          break;
           /* For fixing a bug about iteration of sibling in parameter passing. */
-          return currStack;//break;
+          //return currStack;//break;
         }
 
         default:
